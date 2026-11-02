@@ -1,0 +1,556 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Stamp Every Song — Timestamp Toolkit for Music Videos</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=Playfair+Display:ital,wght@0,700;0,900;1,400;1,700&display=swap" rel="stylesheet">
+<style>
+@page { size: 720px 1020px; margin: 0; }
+:root {
+  --c-bg: #151312;
+  --c-bg2: #191614;
+  --c-card: #221e1d;
+  --c-border: #624d43;
+  --c-icon: #b88166;
+  --c-accent: #cd805a;
+  --c-text: #eeedec;
+  --c-muted: #8b8581;
+}
+html, body {
+  margin: 0; padding: 0; width: 720px;
+  background: var(--c-bg);
+  color: var(--c-text);
+  font-family: 'Inter', 'Noto Sans SC', sans-serif;
+  font-size: 16px; line-height: 1.65;
+  line-break: strict; word-break: normal; overflow-wrap: break-word;
+}
+@media screen {
+  html { height: auto; display: flex; justify-content: center; background: var(--c-bg); }
+  body { transform-origin: top center; margin: 0 auto; box-shadow: 0 0 60px rgba(0,0,0,0.5); }
+}
+p, td, li { line-break: strict; text-align: justify; }
+img, svg { max-width: 100%; height: auto; }
+a { color: var(--c-accent); text-decoration: none; }
+
+/* ---------- COVER ---------- */
+.cover {
+  width: 720px; height: 1020px; box-sizing: border-box;
+  break-after: page; overflow: hidden;
+  position: relative;
+  display: flex; flex-direction: column; justify-content: center;
+  padding: 0 70px;
+  background:
+    radial-gradient(circle at 6% 4%, rgba(205,128,90,0.10) 0%, rgba(205,128,90,0) 34%),
+    radial-gradient(circle at 97% 95%, rgba(205,128,90,0.08) 0%, rgba(205,128,90,0) 32%),
+    var(--c-bg);
+}
+.cover-svg { position: absolute; top: 72px; right: 64px; }
+.cover-kicker {
+  font-size: 12px; font-weight: 500; letter-spacing: 5px;
+  color: var(--c-accent); text-transform: uppercase;
+  margin-bottom: 26px;
+}
+.cover-title {
+  font-family: 'Playfair Display', 'Noto Serif SC', serif;
+  font-size: 74px; font-weight: 900; line-height: 1.08;
+  color: var(--c-text); margin-bottom: 30px; max-width: 560px;
+}
+.cover-title .accent { color: var(--c-accent); font-style: italic; }
+.cover-summary {
+  font-size: 16.5px; line-height: 1.7; color: var(--c-muted);
+  max-width: 500px; margin-bottom: 42px; text-align: left;
+}
+.cover-chips { display: flex; flex-wrap: wrap; gap: 12px; max-width: 100%; }
+.chip {
+  flex: 0 1 auto; min-width: 80px; max-width: 100%;
+  background: rgba(184,129,102,0.14); border-radius: 999px;
+  padding: 9px 18px; font-size: 11.5px; font-weight: 600;
+  letter-spacing: 2.5px; text-transform: uppercase; color: var(--c-icon);
+}
+.cover-footer {
+  position: absolute; bottom: 58px; left: 70px; right: 70px;
+  display: flex; justify-content: space-between;
+  font-size: 10.5px; letter-spacing: 3px; text-transform: uppercase;
+  color: var(--c-muted);
+}
+
+/* ---------- BODY ---------- */
+.main-content { padding: 58px 62px 44px 62px; }
+.chapter-header { break-after: avoid; break-inside: avoid; margin-top: 28px; }
+.chapter-header.first { margin-top: 0; }
+.section-tag {
+  font-size: 11px; font-weight: 700; letter-spacing: 4px;
+  text-transform: uppercase; color: var(--c-accent); margin-bottom: 8px;
+}
+.section-title {
+  font-family: 'Playfair Display', 'Noto Serif SC', serif;
+  font-size: 27px; font-weight: 700; line-height: 1.2;
+  color: var(--c-text); margin-bottom: 10px;
+}
+.section-title::after {
+  content: ''; display: block;
+  width: 64px; height: 3px; background: var(--c-accent);
+  border-radius: 2px; margin-top: 10px; margin-bottom: 16px;
+}
+.body-text { margin: 0 0 14px 0; color: var(--c-text); }
+.body-text b { color: var(--c-accent); font-weight: 700; }
+.small-note {
+  font-size: 13.5px; color: var(--c-muted); line-height: 1.6;
+  border-left: 2px solid var(--c-border);
+  padding-left: 14px; margin: 4px 0 14px 0;
+  break-inside: avoid;
+}
+.small-note b { color: var(--c-icon); }
+
+/* cards */
+.card {
+  background: var(--c-card); border: 1px solid rgba(98,77,67,0.45);
+  border-radius: 14px; padding: 20px 22px;
+  margin-bottom: 14px; break-inside: avoid;
+}
+.card-title {
+  font-size: 16.5px; font-weight: 700; color: var(--c-text);
+  margin-bottom: 6px;
+}
+.card-title .pill {
+  display: inline-block; vertical-align: 2px;
+  font-size: 10px; font-weight: 700; letter-spacing: 1.5px;
+  color: var(--c-bg); background: var(--c-accent);
+  border-radius: 999px; padding: 3px 10px; margin-left: 8px;
+  text-transform: uppercase;
+}
+.card-sub { font-size: 13px; color: var(--c-muted); margin-bottom: 12px; }
+.card p { margin: 0 0 10px 0; font-size: 14.5px; text-align: left; }
+.card p:last-child { margin-bottom: 0; }
+
+/* steps */
+.step { display: flex; gap: 12px; margin-bottom: 9px; break-inside: avoid; }
+.step:last-child { margin-bottom: 0; }
+.step-num {
+  flex: 0 0 24px; width: 24px; height: 24px; box-sizing: border-box;
+  border: 1.5px solid var(--c-accent); border-radius: 50%;
+  color: var(--c-accent); font-size: 12px; font-weight: 700;
+  display: flex; align-items: center; justify-content: center;
+  margin-top: 1px;
+}
+.step-body { flex: 1 1 auto; min-width: 0; font-size: 14.5px; text-align: left; }
+.step-body b { color: var(--c-accent); }
+
+/* fact row inside cards */
+.fact-row { display: flex; flex-wrap: wrap; gap: 8px; margin: 10px 0 12px 0; max-width: 100%; }
+.fact {
+  flex: 0 1 auto; min-width: 70px; max-width: 100%;
+  font-size: 11px; font-weight: 600; letter-spacing: 1.2px;
+  text-transform: uppercase; color: var(--c-icon);
+  background: rgba(184,129,102,0.10); border-radius: 6px; padding: 5px 10px;
+}
+
+/* tables */
+table {
+  width: 100%; border-collapse: collapse; table-layout: fixed;
+  margin: 6px 0 14px 0; break-inside: avoid;
+}
+thead { display: table-header-group; }
+tr { break-inside: avoid; }
+th {
+  background: #524037; color: #f2ede9;
+  font-size: 12px; font-weight: 700; letter-spacing: 1px; text-transform: uppercase;
+  padding: 9px 12px; text-align: left;
+}
+td {
+  font-size: 13px; color: var(--c-text); text-align: left;
+  border-bottom: 1px solid rgba(98,77,67,0.4);
+  padding: 7px 12px; vertical-align: top;
+  overflow-wrap: break-word; word-break: break-word;
+}
+tbody tr:nth-child(odd) { background: var(--c-bg2); }
+td .tool { color: var(--c-accent); font-weight: 600; }
+td.url { word-break: break-all; font-size: 12px; color: var(--c-icon); }
+
+/* tutorial links */
+.tuts { margin-top: 10px; break-inside: avoid; }
+.tuts-title {
+  font-size: 10.5px; font-weight: 700; letter-spacing: 2px;
+  text-transform: uppercase; color: var(--c-muted); margin-bottom: 5px;
+}
+.tuts a { display: block; font-size: 12.5px; line-height: 1.55; word-break: break-all; text-align: left; }
+
+/* pipeline */
+.pipe-step {
+  display: flex; gap: 14px; margin-bottom: 10px; break-inside: avoid;
+  background: var(--c-card); border-radius: 12px; padding: 13px 16px;
+  border: 1px solid rgba(98,77,67,0.45);
+}
+.pipe-num {
+  flex: 0 0 30px; width: 30px; height: 30px;
+  background: var(--c-accent); color: var(--c-bg);
+  border-radius: 8px; font-size: 14px; font-weight: 800;
+  display: flex; align-items: center; justify-content: center;
+}
+.pipe-body { flex: 1 1 auto; min-width: 0; font-size: 14px; text-align: left; }
+.pipe-body b { color: var(--c-accent); }
+
+/* ---------- ENDING ---------- */
+.ending {
+  width: 720px; height: 1020px; box-sizing: border-box;
+  break-before: page; overflow: hidden; position: relative;
+  display: flex; flex-direction: column; justify-content: center;
+  padding: 0 80px;
+  background:
+    radial-gradient(circle at 4% 45%, rgba(205,128,90,0.09) 0%, rgba(205,128,90,0) 36%),
+    var(--c-bg);
+}
+.ending-big {
+  font-family: 'Playfair Display', 'Noto Serif SC', serif;
+  font-size: 52px; font-weight: 900; line-height: 1.15;
+  color: var(--c-text); margin-bottom: 26px;
+}
+.ending-big .accent { color: var(--c-accent); font-style: italic; }
+.ending-sub { font-size: 16px; color: var(--c-muted); max-width: 460px; text-align: left; }
+.ending-footer {
+  position: absolute; bottom: 58px; left: 80px; right: 80px;
+  display: flex; justify-content: space-between;
+  font-size: 10.5px; letter-spacing: 3px; text-transform: uppercase; color: var(--c-muted);
+}
+</style>
+</head>
+<body>
+
+<!-- ================= COVER ================= -->
+<div class="cover">
+  <svg class="cover-svg" width="150" height="150" viewBox="0 0 150 150" fill="none">
+    <circle cx="62" cy="62" r="44" stroke="#cd805a" stroke-width="0.7" opacity="0.22"/>
+    <circle cx="74" cy="70" r="44" stroke="#cd805a" stroke-width="0.7" opacity="0.34"/>
+    <circle cx="86" cy="78" r="44" stroke="#cd805a" stroke-width="0.7" opacity="0.5"/>
+    <circle cx="122" cy="34" r="6" fill="#cd805a" opacity="0.55"/>
+    <circle cx="112" cy="52" r="2.5" fill="#cd805a" opacity="0.3"/>
+  </svg>
+  <div class="cover-kicker">Jesus Juice Productions &middot; Field Guide 01</div>
+  <div class="cover-title">Stamp <span class="accent">Every</span> Song</div>
+  <div class="cover-summary">
+    Three kinds of timestamps power every great music video: the song&rsquo;s structure,
+    the lyrics, and the beat. This guide gives you the best free route for each one &mdash;
+    researched across GitHub, the web and YouTube in November 2026, with every link
+    verified live and every pick chosen for a Windows PC and a zero-code workflow.
+  </div>
+  <div class="cover-chips">
+    <span class="chip">Structure Maps</span>
+    <span class="chip">Synced Lyrics</span>
+    <span class="chip">Beat-Locked Cuts</span>
+  </div>
+  <div class="cover-footer">
+    <span>Edition 01 &mdash; November 2026</span>
+    <span>All tools free unless marked</span>
+  </div>
+</div>
+
+<!-- ================= BODY ================= -->
+<div class="main-content">
+
+  <!-- ---------- 1. SHORT ANSWER ---------- -->
+  <div class="chapter-header first">
+    <div class="section-tag">Part 01</div>
+    <div class="section-title">The Short Answer</div>
+  </div>
+  <p class="body-text">
+    &ldquo;Time-stamping a song&rdquo; actually means three different jobs, and each one feeds
+    your music video in a different way. A <b>structure map</b> tells you where the intro,
+    verses, choruses and outro land, so you can plan which footage hits at which moment.
+    <b>Synced lyrics</b> put the right words on screen at the right second, as an LRC or SRT
+    file. A <b>beat grid</b> gives your cuts a pulse, so every clip change lands on the
+    music instead of drifting past it. The three research passes behind this guide tested
+    the popular options honestly &mdash; several famous tools turned out to be dead, broken
+    or paid &mdash; and what survived is below.
+  </p>
+  <div class="card">
+    <div class="card-title">I want a song structure map <span class="pill">Moises</span></div>
+    <div class="fact-row">
+      <span class="fact">Free tier</span><span class="fact">Difficulty 1 / 5</span><span class="fact">About 5 min</span>
+    </div>
+    <p>Upload your WAV or MP3 at moises.ai and the AI marks Intro, Verse, Chorus and more
+    directly on a timeline. Fastest labeled route for your own YuE2 renders; a YouTube-URL
+    fallback exists via SONOTELLER, and an offline free-forever route via Sonic Visualiser.</p>
+  </div>
+  <div class="card">
+    <div class="card-title">I want synced lyrics <span class="pill">QuickLRC</span></div>
+    <div class="fact-row">
+      <span class="fact">Free</span><span class="fact">Difficulty 1 / 5</span><span class="fact">About 10 min</span>
+    </div>
+    <p>You wrote the lyrics, so a tap-along editor guarantees 100 percent correct text
+    where speech-to-text AI mishears sung vocals. QuickLRC exports SRT for editors and
+    LRC for players from the same session.</p>
+  </div>
+  <div class="card">
+    <div class="card-title">I want beat-locked cuts <span class="pill">CapCut</span></div>
+    <div class="fact-row">
+      <span class="fact">Free</span><span class="fact">Difficulty 1 / 5</span><span class="fact">About 5 min</span>
+    </div>
+    <p>CapCut Desktop&rsquo;s built-in Beat Sync detects the beats, drops markers on the
+    timeline and can auto-align clips to them &mdash; detection, markers and cutting in
+    one free app, with no external files to juggle.</p>
+  </div>
+
+  <!-- ---------- 2. STRUCTURE ---------- -->
+  <div class="chapter-header">
+    <div class="section-tag">Part 02</div>
+    <div class="section-title">Song Structure Maps</div>
+  </div>
+  <p class="body-text">
+    A structure map is the planning layer of a music video. When you know the chorus
+    starts at 1:07, you know the hook visual goes there, the verse footage stays
+    conversational, and the bridge is your slow-motion or tonal-shift moment. Because
+    YuE2 decides its own arrangement, your song&rsquo;s real structure is only discoverable
+    from the audio itself &mdash; these three routes read it for you, from easiest to most manual.
+  </p>
+  <div class="card">
+    <div class="card-title">Route A &mdash; Moises Song Parts <span class="pill">Web app</span></div>
+    <div class="fact-row">
+      <span class="fact">Free tier</span><span class="fact">Difficulty 1 / 5</span><span class="fact">File upload</span>
+    </div>
+    <div class="step"><div class="step-num">1</div><div class="step-body">Go to <a href="https://www.moises.ai">moises.ai</a> and create a free account (web or app).</div></div>
+    <div class="step"><div class="step-num">2</div><div class="step-body">Upload your YuE2 song as WAV or MP3 from your PC.</div></div>
+    <div class="step"><div class="step-num">3</div><div class="step-body">Open the <b>Song Parts / Sections</b> view: an AI timeline with Intro, Verse, Chorus and more.</div></div>
+    <div class="step"><div class="step-num">4</div><div class="step-body">Write the times into your edit plan &mdash; pair them with the beat workflow in Part 05.</div></div>
+    <p style="margin-top:10px;">Caveat: the feature page confirms AI-detected sections on upload, but the exact free-tier
+    limits were not stated publicly &mdash; test with your account first. If sections are gated, use Route B.</p>
+    <div class="tuts">
+      <div class="tuts-title">Tutorial (verified)</div>
+      <a href="https://www.youtube.com/watch?v=uAv86bRIEeI">Moises Presents: Sections &mdash; youtube.com/watch?v=uAv86bRIEeI</a>
+    </div>
+  </div>
+  <div class="card">
+    <div class="card-title">Route B &mdash; SONOTELLER.AI <span class="pill">No account</span></div>
+    <div class="fact-row">
+      <span class="fact">Free demo</span><span class="fact">Difficulty 1 / 5</span><span class="fact">YouTube URL</span>
+    </div>
+    <div class="step"><div class="step-num">1</div><div class="step-body">Upload your song to YouTube as unlisted (you will do this anyway before publishing).</div></div>
+    <div class="step"><div class="step-num">2</div><div class="step-body">Paste the video URL at <a href="https://sonoteller.ai">sonoteller.ai</a>.</div></div>
+    <div class="step"><div class="step-num">3</div><div class="step-body">Read the returned <b>Song Sections with timestamps</b>, plus BPM, key and genre tags.</div></div>
+    <p style="margin-top:10px;">Catch: the free demo analyzes YouTube links and artist/song searches; direct file upload
+    is behind their paid API. For files on disk, use Route A or C.</p>
+  </div>
+  <div class="card">
+    <div class="card-title">Route C &mdash; Sonic Visualiser + Segmentino <span class="pill">Offline</span></div>
+    <div class="fact-row">
+      <span class="fact">Free forever</span><span class="fact">Difficulty 2.5 / 5</span><span class="fact">Windows installer</span>
+    </div>
+    <div class="step"><div class="step-num">1</div><div class="step-body">Install Sonic Visualiser (64-bit Windows MSI) from <a href="https://www.sonicvisualiser.org/download.html">sonicvisualiser.org/download.html</a>.</div></div>
+    <div class="step"><div class="step-num">2</div><div class="step-body">Install the free <b>Vamp Plugin Pack</b> from <a href="https://vamp-plugins.org/pack.html">vamp-plugins.org/pack.html</a> &mdash; it bundles Segmentino.</div></div>
+    <div class="step"><div class="step-num">3</div><div class="step-body">Open your song, then menu <b>Transform &rarr; Analysis by Segmentino &rarr; Segmentation</b>.</div></div>
+    <div class="step"><div class="step-num">4</div><div class="step-body">Segmentino draws numbered segments (1, 2, 3&hellip;) with boundary times &mdash; listen and rename them yourself: the segment that repeats is usually your chorus.</div></div>
+    <div class="step"><div class="step-num">5</div><div class="step-body"><b>File &rarr; Export Annotation Layer</b> and choose .csv for a timestamp list you can paste anywhere.</div></div>
+    <div class="tuts">
+      <div class="tuts-title">Tutorial (verified)</div>
+      <a href="https://www.youtube.com/watch?v=Dc3GwR83up4">Introduction to Sonic Visualiser &mdash; youtube.com/watch?v=Dc3GwR83up4</a>
+    </div>
+  </div>
+  <p class="small-note">
+    <b>Pro option, parked:</b> the research-grade <b>All-In-One Music Structure Analyzer</b>
+    (github.com/mir-aidj/all-in-one, MIT license) outputs exactly what a video editor wants &mdash;
+    BPM, beat and downbeat times, and segments labeled intro / verse / chorus in one JSON file,
+    plus a PDF visualization. It is parked because the Windows install requires building the
+    NATTEN dependency from source, and its HuggingFace demo was down (HTTP 503) at research time.
+    Revisit it when you are comfortable with Python &mdash; everything else in this guide needs none.
+  </p>
+
+  <!-- ---------- 3. LYRICS ---------- -->
+  <div class="chapter-header">
+    <div class="section-tag">Part 03</div>
+    <div class="section-title">Synced Lyrics (LRC / SRT)</div>
+  </div>
+  <p class="body-text">
+    Here is the insight that saves you hours: <b>you already know the exact lyrics</b> &mdash; you
+    wrote them. Automatic transcription (Whisper-style AI) is built for speech, and sung vocals
+    with reverb, harmonies and stretched syllables are exactly where it garbles words, which
+    means you would retype every line anyway. A manual tap-along editor flips the workflow:
+    the text is perfect from the start, and you only supply the timing, one keypress per line.
+    Ten minutes per song, and the result drops straight into your editor.
+  </p>
+  <div class="card">
+    <div class="card-title">The pick &mdash; QuickLRC Tap-to-Sync <span class="pill">Browser</span></div>
+    <div class="fact-row">
+      <span class="fact">Free</span><span class="fact">Difficulty 1 / 5</span><span class="fact">SRT + LRC out</span>
+    </div>
+    <div class="step"><div class="step-num">1</div><div class="step-body">Open <a href="https://quicklrc.com/lrc-maker">quicklrc.com/lrc-maker</a> in your browser.</div></div>
+    <div class="step"><div class="step-num">2</div><div class="step-body">Paste your lyrics &mdash; one line per row, exactly as sung.</div></div>
+    <div class="step"><div class="step-num">3</div><div class="step-body">Load your song (WAV or MP3 from the YuE2 run ZIP you downloaded).</div></div>
+    <div class="step"><div class="step-num">4</div><div class="step-body">Press play and tap the sync key at the start of every sung line.</div></div>
+    <div class="step"><div class="step-num">5</div><div class="step-body">Nudge any line that feels early or late, then export <b>SRT</b> (for CapCut / Resolve / Premiere) and <b>LRC</b> (for players).</div></div>
+    <div class="tuts">
+      <div class="tuts-title">Tutorial (verified)</div>
+      <a href="https://www.youtube.com/watch?v=N2oMYKALpTo">LRC Maker | QuickLRC &mdash; youtube.com/watch?v=N2oMYKALpTo</a>
+    </div>
+  </div>
+  <p class="body-text">
+    Getting it on screen is one import. <b>CapCut Desktop</b> accepts SRT, LRC and ASS files
+    directly (tutorial: youtube.com/watch?v=PHyzxofiWo0). <b>DaVinci Resolve</b> (free) imports
+    SRT into a timeline subtitle track from the Media Pool (tutorial: youtube.com/watch?v=GlofcO66pgY).
+    Style the captions once, copy the track, and every future video inherits the look.
+  </p>
+  <div class="card">
+    <div class="card-title">Upgrade path &mdash; karaoke word timing <span class="pill">Later</span></div>
+    <div class="fact-row">
+      <span class="fact">Optional</span><span class="fact">Word-level</span><span class="fact">All free</span>
+    </div>
+    <p><b>QuickLRC Enhanced generator</b> (quicklrc.com/enhanced-lrc-generator) adds word-by-word
+    highlighting for karaoke-style lyric videos. <b>ESPnet Forced Alignment</b>
+    (huggingface.co/spaces/espnet/forced-alignment) takes your audio <i>plus your known text</i>
+    and returns a start and end time for every line &mdash; the rare tool that accepts supplied
+    lyrics; free spaces sleep, so the first visit may take a minute to wake. <b>WhisperX</b>
+    (github.com/m-bain/whisperX) auto-transcribes with word timestamps via its free Colab
+    (colab.research.google.com/github/ardha27/WhisperX-Youtube-SRT) &mdash; handy for other
+    people&rsquo;s songs, but for your own lyrics the tap-along route is faster and more accurate.</p>
+  </div>
+
+  <!-- ---------- 4. BEATS ---------- -->
+  <div class="chapter-header">
+    <div class="section-tag">Part 04</div>
+    <div class="section-title">Beat-Locked Cuts</div>
+  </div>
+  <p class="body-text">
+    Cutting on the beat is the difference between a video that feels edited and one that
+    feels choreographed. The dream is beat timestamps arriving as markers in your editor,
+    and the research found three honest ways to get there: one built into a free editor,
+    one plugin for the pro-grade free editor, and one plain-text route that works with
+    any tool you will ever use.
+  </p>
+  <p class="body-text">
+    A quick word on what a marker is, because editors use the word loosely: it is a
+    labeled flag pinned to an exact time on the timeline. Beat tools create one marker
+    per detected beat (or per bar, which is every few beats and usually more practical
+    for cutting). Once markers exist, snapping a clip edge to one is a single drag in
+    every major editor &mdash; and that drag is the whole trick behind &ldquo;cutting on the beat&rdquo;.
+  </p>
+  <div class="card">
+    <div class="card-title">Route A &mdash; CapCut Desktop Beat Sync <span class="pill">Built-in</span></div>
+    <div class="fact-row">
+      <span class="fact">Free</span><span class="fact">Difficulty 1 / 5</span><span class="fact">Windows app</span>
+    </div>
+    <div class="step"><div class="step-num">1</div><div class="step-body">Download CapCut Desktop free from <a href="https://www.capcut.com">capcut.com</a>.</div></div>
+    <div class="step"><div class="step-num">2</div><div class="step-body">Import your song and footage; drop the song on the timeline first.</div></div>
+    <div class="step"><div class="step-num">3</div><div class="step-body">Select the audio and run <b>Beat Sync</b> (auto detection), or tap markers manually while it plays.</div></div>
+    <div class="step"><div class="step-num">4</div><div class="step-body">Cut your clips to the markers &mdash; or let auto-align snap clips onto beats for you.</div></div>
+    <p style="margin-top:10px;">CapCut&rsquo;s own guides document both automatic and manual beat syncing; some premium
+    effects sit behind Pro, but the beat workflow is shown free in official tutorials.</p>
+    <div class="tuts">
+      <div class="tuts-title">Tutorials (verified)</div>
+      <a href="https://www.youtube.com/watch?v=HSwOE5WXCUU">How To Sync Beat in CapCut PC &mdash; youtube.com/watch?v=HSwOE5WXCUU</a>
+      <a href="https://www.youtube.com/watch?v=ZCYBTcyOGAA">CapCut Beat Sync Tutorial (manual + auto) &mdash; youtube.com/watch?v=ZCYBTcyOGAA</a>
+    </div>
+  </div>
+  <div class="card">
+    <div class="card-title">Route B &mdash; DaVinci Resolve free + beat plugin <span class="pill">Markers</span></div>
+    <div class="fact-row">
+      <span class="fact">Free</span><span class="fact">Difficulty 3 / 5</span><span class="fact">Windows only</span>
+    </div>
+    <p>The community plugin <b>davinci-beat-marker-plugin</b>
+    (github.com/urmamge/davinci-beat-marker-plugin) detects beats and bars in any song on
+    your Resolve timeline and places color-coded markers automatically. A one-click
+    PowerShell installer sets up everything (Python plus the librosa detection engine) &mdash;
+    no coding. The README confirms it works in the free version of Resolve, but note:
+    Blackmagic tightened free-version scripting from Resolve 19.1 onward, so test on the
+    version you run before relying on it in production.</p>
+    <div class="tuts">
+      <div class="tuts-title">Tutorial (verified)</div>
+      <a href="https://www.youtube.com/watch?v=pcWbYHVadWE">FREE Automatic Beat Markers in DaVinci Resolve &mdash; youtube.com/watch?v=pcWbYHVadWE</a>
+    </div>
+  </div>
+  <div class="card">
+    <div class="card-title">Route C &mdash; a plain timestamp list <span class="pill">Any editor</span></div>
+    <div class="fact-row">
+      <span class="fact">Free</span><span class="fact">Difficulty 2 / 5</span><span class="fact">TXT output</span>
+    </div>
+    <p><b>Audacity</b> (audacityteam.org): open the song, <b>Analyze &rarr; Beat Finder</b>, then
+    <b>File &rarr; Export &rarr; Export Labels</b> for a tab-separated .txt of timestamps. Audacity&rsquo;s
+    manual honestly calls Beat Finder &ldquo;rough and ready&rdquo; on modern compressed music &mdash; treat
+    it as onset hints, not gospel. For true beat timestamps, the command-line tool <b>aubio</b>
+    ships a Windows build (aubio.org/bin/0.4.6/aubio-0.4.6-win64.zip) whose <b>aubiotrack</b>
+    command prints one beat time per line &mdash; accurate, but typing commands in cmd.exe earns
+    it a 4/5 difficulty.</p>
+  </div>
+  <p class="small-note">
+    <b>Paid reference:</b> BeatEdit for Premiere Pro is USD 99.99 and BeatEdit for DaVinci Resolve
+    is USD 49.99 (aescripts.com) &mdash; both excellent, but the Resolve edition now requires Studio 19.1+,
+    so the free plugin above is the sensible starting point. Skip them until editing revenue pays for them.
+  </p>
+
+  <!-- ---------- 5. CHAPTERS + PIPELINE ---------- -->
+  <div class="chapter-header">
+    <div class="section-tag">Part 05</div>
+    <div class="section-title">YouTube Chapters + The Full Pipeline</div>
+  </div>
+  <p class="body-text">
+    Timestamps are not only for your editing timeline &mdash; YouTube turns them into clickable
+    chapters on the watch page, and viewers love them on music videos. The official rules
+    (support.google.com/youtube/answer/9884579) are simple: the first timestamp must be
+    <b>00:00</b>, you need at least <b>three</b> in ascending order, each chapter must be at
+    least <b>ten seconds</b> long, and the list goes straight into the video description.
+    Your structure map from Part 02 is the chapters list &mdash; write it once, use it twice.
+  </p>
+  <div class="card">
+    <div class="card-title">The full JJP pipeline for one YuE2 song <span class="pill">Six steps</span></div>
+    <div class="pipe-step"><div class="pipe-num">1</div><div class="pipe-body"><b>Generate on Kaggle.</b> Run the YuE2 ComfyUI canvas, queue the prompt, and download the complete run ZIP from the wrapper &mdash; the WAV lives inside.</div></div>
+    <div class="pipe-step"><div class="pipe-num">2</div><div class="pipe-body"><b>Map the structure.</b> Upload the WAV to Moises Song Parts (or SONOTELLER once the song is on YouTube). Write down intro / verse / chorus / outro times.</div></div>
+    <div class="pipe-step"><div class="pipe-num">3</div><div class="pipe-body"><b>Tap the lyrics.</b> QuickLRC tap-along with your written lyrics; export SRT and LRC.</div></div>
+    <div class="pipe-step"><div class="pipe-num">4</div><div class="pipe-body"><b>Edit on the beat.</b> CapCut Desktop: Beat Sync for markers, import the SRT, and land your hook visual exactly where the structure map says the chorus starts.</div></div>
+    <div class="pipe-step"><div class="pipe-num">5</div><div class="pipe-body"><b>Export and publish.</b> Render, upload to YouTube, keep the song unlisted first if you want a SONOTELLER cross-check.</div></div>
+    <div class="pipe-step"><div class="pipe-num">6</div><div class="pipe-body"><b>Chapters in the description.</b> Start at 00:00, three-plus timestamps, ten-second minimum &mdash; straight from step 2&rsquo;s notes.</div></div>
+  </div>
+
+  <!-- ---------- 6. LINKS ---------- -->
+  <div class="chapter-header">
+    <div class="section-tag">Part 06</div>
+    <div class="section-title">Link Directory</div>
+  </div>
+  <p class="body-text">
+    Every URL below was opened and verified during the November 2026 research pass &mdash;
+    tools that failed verification (lrcgenerator.com, the old Resolve marker-import repo,
+    several HuggingFace demo spaces) are deliberately absent. The toolkit in one sentence:
+    <b>Moises or SONOTELLER</b> for the map, <b>QuickLRC</b> for the words, <b>CapCut or the
+    Resolve plugin</b> for the pulse &mdash; all free, all no-code.
+  </p>
+  <table>
+    <thead>
+      <tr><th style="width:26%;">Tool</th><th style="width:34%;">What it gives you</th><th style="width:40%;">Where</th></tr>
+    </thead>
+    <tbody>
+      <tr><td><span class="tool">Moises</span></td><td>Song Parts: AI section timeline from your file</td><td class="url">moises.ai &middot; moises.ai/features/song-parts</td></tr>
+      <tr><td><span class="tool">SONOTELLER</span></td><td>Sections with timestamps + BPM from a YouTube URL</td><td class="url">sonoteller.ai</td></tr>
+      <tr><td><span class="tool">Sonic Visualiser</span></td><td>Offline analysis + annotation CSV export</td><td class="url">sonicvisualiser.org/download.html</td></tr>
+      <tr><td><span class="tool">Vamp Plugin Pack</span></td><td>Installs Segmentino segmentation plugin</td><td class="url">vamp-plugins.org/pack.html</td></tr>
+      <tr><td><span class="tool">All-In-One (allin1)</span></td><td>Labeled structure JSON + BPM (pro, parked)</td><td class="url">github.com/mir-aidj/all-in-one</td></tr>
+      <tr><td><span class="tool">QuickLRC</span></td><td>Tap-to-sync lyrics; SRT / LRC / WebVTT export</td><td class="url">quicklrc.com/lrc-maker</td></tr>
+      <tr><td><span class="tool">ESPnet Alignment</span></td><td>Aligns your known text to audio, line times</td><td class="url">huggingface.co/spaces/espnet/forced-alignment</td></tr>
+      <tr><td><span class="tool">WhisperX Colab</span></td><td>Auto SRT from a YouTube link, zero install</td><td class="url">github.com/ardha27/WhisperX-Youtube-SRT</td></tr>
+      <tr><td><span class="tool">CapCut Desktop</span></td><td>Beat Sync markers + SRT/LRC import</td><td class="url">capcut.com</td></tr>
+      <tr><td><span class="tool">Resolve Beat Plugin</span></td><td>Auto beat markers in free DaVinci Resolve</td><td class="url">github.com/urmamge/davinci-beat-marker-plugin</td></tr>
+      <tr><td><span class="tool">Audacity</span></td><td>Beat Finder labels &rarr; exported .txt timestamps</td><td class="url">audacityteam.org</td></tr>
+      <tr><td><span class="tool">aubio (win64)</span></td><td>Command-line beat timestamps, one per line</td><td class="url">aubio.org/bin/0.4.6/aubio-0.4.6-win64.zip</td></tr>
+      <tr><td><span class="tool">BeatEdit (paid)</span></td><td>Premium beat markers: Premiere USD 99.99 / Resolve USD 49.99</td><td class="url">aescripts.com/beatedit-for-premiere-pro</td></tr>
+      <tr><td><span class="tool">YouTube Chapters</span></td><td>Official timestamp rules for descriptions</td><td class="url">support.google.com/youtube/answer/9884579</td></tr>
+    </tbody>
+  </table>
+
+</div>
+
+<!-- ================= ENDING ================= -->
+<div class="ending">
+  <svg width="170" height="90" viewBox="0 0 200 100" fill="none" style="margin-bottom: 34px;">
+    <path d="M10,80 C50,10 150,10 190,80" stroke="#cd805a" stroke-width="0.8" opacity="0.3"/>
+    <path d="M10,86 C60,22 140,22 190,86" stroke="#cd805a" stroke-width="0.5" opacity="0.18"/>
+    <circle cx="10" cy="80" r="2.5" fill="#cd805a" opacity="0.45"/>
+    <circle cx="190" cy="80" r="2.5" fill="#cd805a" opacity="0.45"/>
+  </svg>
+  <div class="ending-big">Cut on the beat.<br>Land on the <span class="accent">chorus.</span></div>
+  <div class="ending-sub">
+    Structure, lyrics, beat &mdash; three timestamp files per song and your edit practically
+    writes itself. Next session: generate, map, tap, sync.
+  </div>
+  <div class="ending-footer">
+    <span>Jesus Juice Productions</span>
+    <span>Field Guide 01 &middot; Nov 2026</span>
+  </div>
+</div>
+
+</body>
+</html>
