@@ -1,0 +1,37 @@
+{
+  "sample_rate": 44100,
+  "duration": 56.0,
+  "kick_bpm": 100.0,
+  "lines": [
+    {
+      "clip": "line1.wav",
+      "start": 6.0,
+      "end": 8.74
+    },
+    {
+      "clip": "line2.wav",
+      "start": 13.5,
+      "end": 15.92
+    },
+    {
+      "clip": "line3.wav",
+      "start": 21.0,
+      "end": 24.5
+    },
+    {
+      "clip": "line4.wav",
+      "start": 28.5,
+      "end": 31.46
+    },
+    {
+      "clip": "line5.wav",
+      "start": 38.0,
+      "end": 40.46
+    },
+    {
+      "clip": "line6.wav",
+      "start": 45.5,
+      "end": 48.08
+    }
+  ]
+}
