@@ -8,10 +8,12 @@ OUT = os.path.join(DL, "FULL-CHAT-AND-ALL-FILES.zip")
 
 items = [
     ("FULL_CHAT_LOG.md", "FULL_CHAT_LOG.md"),
-    ("DELIVERY-revision-13.md", "DELIVERY-revision-13.md"),
+    ("DELIVERY-revision-14.md", "DELIVERY-revision-14.md"),
     ("Song-Timestamp-Studio-Canvas.zip", "Song-Timestamp-Studio-Canvas.zip"),
     ("Song-Timestamp-Studio-Canvas.ipynb", "Song-Timestamp-Studio-Canvas.ipynb"),
-    ("yue2-music-revision-13.zip", "yue2-music-revision-13.zip"),
+    ("yue2-music-revision-14.zip", "yue2-music-revision-14.zip"),
+    ("yue2-3b-frontier-full-song-music-generation.ipynb", "yue2-3b-frontier-full-song-music-generation.ipynb"),
+    ("yue2-build-kaggle-assets.ipynb", "yue2-build-kaggle-assets.ipynb"),
     ("song-timestamp-toolkit.pdf", "song-timestamp-toolkit.pdf"),
     ("song-timestamp-toolkit.html", "song-timestamp-toolkit.html"),
 ]
