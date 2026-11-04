@@ -8,12 +8,12 @@ OUT = os.path.join(DL, "FULL-CHAT-AND-ALL-FILES.zip")
 
 items = [
     ("FULL_CHAT_LOG.md", "FULL_CHAT_LOG.md"),
-    ("song-timestamp-studio-v1.2.zip", "song-timestamp-studio-v1.2.zip"),
-    ("song-timestamp-studio.ipynb", "song-timestamp-studio.ipynb"),
-    ("yue2-music-revision-11.zip", "yue2-music-revision-11.zip"),
+    ("DELIVERY-revision-13.md", "DELIVERY-revision-13.md"),
+    ("Song-Timestamp-Studio-Canvas.zip", "Song-Timestamp-Studio-Canvas.zip"),
+    ("Song-Timestamp-Studio-Canvas.ipynb", "Song-Timestamp-Studio-Canvas.ipynb"),
+    ("yue2-music-revision-13.zip", "yue2-music-revision-13.zip"),
     ("song-timestamp-toolkit.pdf", "song-timestamp-toolkit.pdf"),
     ("song-timestamp-toolkit.html", "song-timestamp-toolkit.html"),
-    ("DELIVERY-revision-11.md", "DELIVERY-revision-11.md"),
 ]
 
 with zipfile.ZipFile(OUT, "w", zipfile.ZIP_DEFLATED) as zf:
@@ -24,6 +24,13 @@ with zipfile.ZipFile(OUT, "w", zipfile.ZIP_DEFLATED) as zf:
             print("added file:", arc)
         else:
             print("MISSING:", src)
+
+    # browser-test screenshots of the v2.0 flow
+    shots = os.path.join(DL, "timestamp-studio-screens")
+    if os.path.isdir(shots):
+        for f in sorted(os.listdir(shots)):
+            zf.write(os.path.join(shots, f), os.path.join("timestamp-studio-screens", f))
+        print("added screenshots:", len(os.listdir(shots)))
 
     # full repo sources, excluding caches
     skip_dirs = {"__pycache__", ".git", ".ipynb_checkpoints", "node_modules"}

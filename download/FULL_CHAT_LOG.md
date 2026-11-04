@@ -139,3 +139,35 @@ on the original AIQUEST Academy notebook — the old 5-cell layout.
    engine; nudge exact); real-browser audit loaded all 7 nodes with no errors.
 4. GitHub task updated: upload the 35 files in yue2-music-revision-12.zip +
    Song-Timestamp-Studio-Canvas.ipynb, then reply "done".
+
+## Part 9 — "GET THIS FIXED. YOU HAVE ONE MORE TRY." — the upload bug (2026-11-04)
+
+Shaun's screenshot showed the studio canvas open over the Cloudflare link with
+**"Upload failed: Fetch timeout"** on node 1's file button. Root cause found by
+checking the pinned ComfyUI source: the native upload is ONE big POST, and
+(a) ComfyUI rejects anything over its 100 MB default cap and (b) one long POST over
+a slow trycloudflare tunnel dies mid-flight. Movies never hit this because video
+frames are tiny; songs are 10–100× bigger.
+
+**The v2.0 fix (canvas notebook):**
+1. New node **1 · Your Song (STSLoadSong)** replaces LoadAudio on the canvas.
+2. A **📤 Upload songs** page prints with the links: songs travel in **8 MB pieces
+   with automatic retries and a progress bar** (resumable — finished pieces are
+   kept), up to 2 GB. Or paste a **link** (server downloads at Kaggle speed), or
+   **Import** a song already on Kaggle (YuE2 render / + Add Input) with one click.
+3. The song list on the canvas refreshes **live** (cross-tab broadcast) — no F5.
+4. Server cap raised `--max-upload-size` 100 MB → 2048 MB.
+
+**Proof (all automated, real server + real browser):**
+- 105 MB song uploaded in pieces, byte-exact on the server (over the old 100 MB cap).
+- Resumable: missing piece → finish refused (409, names the piece) → retry → OK.
+- Link download works; page links are refused with a plain-English error.
+- Kaggle import works; paths outside the Kaggle folders are refused.
+- SLOW-LINK REPRODUCTION: on a throttled 1.5 Mbps link that kills requests after
+  45 s, the OLD single-shot 12 MB upload dies (the user's bug, reproduced) — the
+  NEW piece-by-piece path succeeds on the very same link (67 s).
+- Real-browser test: 18 MB upload → "100% (piece 3/3)" → success message; song
+  lands in ComfyUI input; canvas tab shows it in the node list and auto-selects
+  it; a second upload appears on the already-open canvas without a reload.
+- Regression: canvas E2E through real ComfyUI queueing still exact (max ±0.46 s,
+  nudge exact); engine 37-check suite all green.

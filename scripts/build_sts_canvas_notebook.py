@@ -66,9 +66,20 @@ The canvas is also under ComfyUI's **Workflows** menu.
 | Beat grid + **Cut Plan CSV** | every beat + clip slots in seconds **and frames @ 24 fps** (MiniMax H3 shot budget) |
 | Full JSON | per-word times for any other tool |
 
-**The canvas:** `LoadAudio → Align Lyrics ← Lyrics & Options`, with `Nudge` and
+**The canvas:** `Your Song → Align Lyrics ← Lyrics & Options`, with `Nudge` and
 `Export All Formats + ZIP` on one branch and `Audition One Line → PreviewAudio`
 (ear check) on the other. Every node is a real stage — nothing is collapsed.
+
+**Getting the song in — three ways (v2.0, big-file safe):**
+
+1. **📤 Upload page** (works for any size, even over a slow connection) — open the
+   `📤 Upload songs` link the cell prints. The song travels in small pieces with
+   automatic retries and a progress bar — the old *"Upload failed: Fetch timeout"*
+   on the little upload button cannot happen anymore. When it says 100%, the song
+   appears in the **Your Song** node list by itself.
+2. **Paste a link** — same page, bottom box. The Kaggle machine downloads it at full speed.
+3. **Already on Kaggle** — a YuE2 render from the same session, or a file added with
+   **+ Add Input**: press **Import** once on the upload page and it's in.
 """
 
 CODE_CELL = '''
@@ -185,7 +196,7 @@ else:
     # CPU-only machines (Kaggle "Accelerator: None") need --cpu; T4 sessions use the GPU.
     launch_flags = ["--listen", "127.0.0.1", "--port", str(COMFY_PORT),
                     "--output-directory", str(OUT), "--disable-auto-launch",
-                    "--preview-method", "none"]
+                    "--preview-method", "none", "--max-upload-size", "2048"]
     try:
         import torch as _torch
         if not _torch.cuda.is_available():
@@ -213,11 +224,11 @@ else:
         raise TimeoutError("ComfyUI did not become ready; see " + str(log_path))
 object_info = json.loads(urllib.request.urlopen(
     f"http://127.0.0.1:{COMFY_PORT}/object_info", timeout=20).read().decode())
-missing = [n for n in ("STSLyricsOptions", "STSAlign", "STSNudge", "STSAudition", "STSExportAll")
+missing = [n for n in ("STSLoadSong", "STSLyricsOptions", "STSAlign", "STSNudge", "STSAudition", "STSExportAll")
            if n not in object_info]
 if missing:
     raise RuntimeError(f"TimestampStudio nodes missing from the server: {missing}")
-print("✅ ComfyUI server ready — all 5 TimestampStudio nodes registered", flush=True)
+print("✅ ComfyUI server ready — all 6 TimestampStudio nodes registered", flush=True)
 
 # --- 6 · Cloudflare link (same checksummed helper as the YuE2 / H3 apps) ------
 def start_cloudflare(port, timeout=90):
@@ -286,6 +297,8 @@ if cf_link:
     canvas_link = cf_link + "/?sts_workflow=studio"
     print("  ☁️  Canvas (opens the graph directly):", flush=True)
     print("      " + canvas_link, flush=True)
+    print("  📤  Upload songs here (big-file safe, with progress bar):", flush=True)
+    print("      " + cf_link + "/sts_uploader", flush=True)
     print("  ☁️  Plain ComfyUI: " + cf_link, flush=True)
 else:
     print("  No public link this session — ComfyUI is running locally on Kaggle.", flush=True)
@@ -305,7 +318,10 @@ except KeyboardInterrupt:
 MD_BOTTOM = """## 🖱️ Using the canvas (30 seconds)
 
 1. Click the ☁️ link — the graph opens directly (also under **Workflows**).
-2. **LoadAudio** — upload your song (the WAV from a YuE2 run ZIP works).
+2. **Get the song in** (see the three ways above). The **📤 Upload songs** link the cell
+   printed is the one to use from your computer — it shows a progress bar and cannot
+   time out like the old upload button. The song then appears in the **Your Song** list
+   by itself; pick it there.
 3. **Lyrics & Options** — paste the lyrics exactly as sung, one line per row. Keep your
    `[Verse]` / `[Chorus]` tags (they become chapters + REAPER regions). Leave it EMPTY to
    auto-transcribe instead. Pick model / language / vocal isolation if needed.
@@ -340,6 +356,10 @@ mixes. Word-level karaoke timing is not included.
 
 | Symptom | Fix |
 |---|---|
+| **Upload failed: Fetch timeout** (old button) | That single-shot button is gone in v2.0. Use the **📤 Upload songs** link the cell printed — chunks + auto-retry + progress bar. Finished pieces are kept, so it continues where it stopped. |
+| Upload stuck mid-way | Keep the upload tab open; it retries itself. If your internet dropped completely, pick the file again — it continues from where it stopped. |
+| Song over 100 MB | Supported — up to 2 GB, and the server limit was raised from ComfyUI's 100 MB default. |
+| Song list doesn't show the new song | The canvas tab refreshes by itself after an upload. If a song was added from Kaggle files, press **Import** on the upload page first — or just reload the canvas tab. |
 | First Run is slow | Whisper models are pre-cached by the setup cell; if the cache step was skipped, the first Run downloads once (~150–500 MB). |
 | 🔴 Low match % | model `small`; vocal isolation ON; check Language; lyrics must match what is actually sung. |
 | All times slightly early/late | **Nudge** node → set the offset → Run again → re-download. |
@@ -348,8 +368,9 @@ mixes. Word-level karaoke timing is not included.
 | Link stopped working | Both links die with the Kaggle session — re-run the cell for fresh ones. |
 | Port 8188 busy | Only one notebook setup at a time per session. |
 
-*Timestamp Studio canvas v1.0 — same engine as the Gradio version, Movies-style delivery.
-Works on any song, not just YuE2 renders. CPU-friendly by design.*
+*Timestamp Studio canvas v2.0 — big-file-safe song delivery (chunked resumable upload,
+link download, Kaggle import), same tested engine, Movies-style delivery. Works on any
+song, not just YuE2 renders. CPU-friendly by design.*
 """
 
 

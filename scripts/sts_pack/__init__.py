@@ -2,7 +2,7 @@
 
 A visible, connected canvas of real, individually executed nodes:
 
-    LoadAudio ──▶ STS Align ◀── STS Lyrics & Options
+    STS Load Song ──▶ STS Align ◀── STS Lyrics & Options
                      │
         ┌────────────┼──────────────────┐
         ▼            ▼                  ▼
@@ -21,9 +21,12 @@ import os
 
 os.environ.setdefault("STS_AUTOLAUNCH", "0")  # never auto-start the Gradio route here
 
+import asyncio
+import hashlib
 import re
 import shutil
 import tempfile
+import urllib.parse
 import zipfile
 
 import numpy as np
@@ -32,6 +35,11 @@ from . import sts_engine as engine
 
 CATEGORY = "Song Timestamp Studio"
 _PREF = "[TimestampStudio] "
+
+AUDIO_EXTS = {".wav", ".mp3", ".flac", ".ogg", ".m4a", ".aac", ".opus",
+              ".webm", ".aiff", ".aif", ".wma"}
+MAX_SONG_BYTES = 2 * 1024 ** 3  # 2 GB — a whole album is fine
+NO_SONG = "(no songs yet — open the 📤 upload link from Kaggle)"
 
 
 def _safe_stem(name):
@@ -64,6 +72,155 @@ def _result_summary(result):
     bpm_text = f", ~{bpm:.1f} BPM" if bpm else ""
     return (f"✅ {lines} sung lines · {rate_text} · "
             f"{(result.get('duration') or 0):.1f}s{bpm_text}")
+
+
+def _input_dir():
+    try:
+        import folder_paths
+
+        d = folder_paths.get_input_directory()
+    except Exception:
+        d = os.path.join(os.getcwd(), "input")
+    os.makedirs(d, exist_ok=True)
+    return d
+
+
+def _temp_dir():
+    try:
+        import folder_paths
+
+        d = folder_paths.get_temp_directory()
+    except Exception:
+        d = os.path.join(os.getcwd(), "temp")
+    os.makedirs(d, exist_ok=True)
+    return d
+
+
+def _safe_song_name(name):
+    name = os.path.basename(str(name or "")).strip()
+    name = re.sub(r"[^A-Za-z0-9 _.\-()\[\]]+", "_", name)
+    return (name or "song.wav")[:120]
+
+
+def _is_audio_name(name):
+    return os.path.splitext(name)[1].lower() in AUDIO_EXTS
+
+
+def _unique_path(dest):
+    if not os.path.exists(dest):
+        return dest
+    base, ext = os.path.splitext(dest)
+    i = 2
+    while os.path.exists(f"{base} ({i}){ext}"):
+        i += 1
+    return f"{base} ({i}){ext}"
+
+
+def _list_input_songs():
+    d = _input_dir()
+    try:
+        return sorted(f for f in os.listdir(d)
+                      if _is_audio_name(f) and not f.startswith("."))
+    except Exception:
+        return []
+
+
+def _scan_roots():
+    roots = [r for r in os.environ.get(
+        "STS_SCAN_ROOTS", "/kaggle/working:/kaggle/input").split(":") if r]
+    out_root = os.environ.get("STS_OUTPUT_ROOT")
+    if out_root:
+        roots.append(out_root)
+    return [r for r in roots if os.path.isdir(r)]
+
+
+def _load_audio_file(path):
+    """(waveform [channels, samples] float32, sample_rate) — mirrors LoadAudio."""
+    last = None
+    try:
+        from comfy_extras.nodes_audio import load as _comfy_load
+
+        return _comfy_load(path)
+    except Exception as exc:
+        last = exc
+    try:
+        import torchaudio
+
+        wav, sr = torchaudio.load(path)
+        return wav, int(sr)
+    except Exception as exc:
+        last = exc
+    try:
+        import soundfile as sf
+        import torch
+
+        data, sr = sf.read(path, dtype="float32", always_2d=True)
+        return torch.from_numpy(data.T), int(sr)
+    except Exception as exc:
+        last = exc
+    raise RuntimeError(f"Could not read '{os.path.basename(path)}': {last}")
+
+
+class STSLoadSong:
+    """Your song — pick it from the list, or add it with the 📤 uploader link.
+
+    The old single-shot upload button could die halfway ("Fetch timeout") when a
+    big song crossed a slow tunnel. Songs now arrive through the chunked uploader
+    (small pieces, auto-retry, progress bar) or straight from a link — both land
+    in ComfyUI's input folder and appear in this list.
+    """
+
+    @classmethod
+    def INPUT_TYPES(cls):
+        files = _list_input_songs()
+        return {"required": {"audio": (files or [NO_SONG],)}}
+
+    RETURN_TYPES = ("AUDIO",)
+    FUNCTION = "execute"
+    CATEGORY = CATEGORY
+    DESCRIPTION = ("Pick your song from the list. To add a song use the 📤 upload link "
+                   "printed by the setup cell (chunked, big-file safe, progress bar) or "
+                   "the link box on that page.")
+
+    @classmethod
+    def hidden_validate(cls, audio):
+        p = os.path.join(_input_dir(), str(audio))
+        if os.path.isfile(p):
+            return True, p
+        files = _list_input_songs()
+        if len(files) == 1:  # exactly one song on the server → use it, beginner-proof
+            return True, os.path.join(_input_dir(), files[0])
+        return False, (f"'{audio}' is not on the studio server yet. Open the 📤 upload link "
+                       "printed by the setup cell, add the song there, then pick it from "
+                       "this list (reload the canvas page if the list looks old).")
+
+    @classmethod
+    def validate_inputs(cls, audio):
+        ok, info = cls.hidden_validate(audio)
+        return True if ok else info
+
+    @classmethod
+    def fingerprint_inputs(cls, audio):
+        ok, p = cls.hidden_validate(audio)
+        if not ok:
+            return None
+        h = hashlib.sha256()
+        with open(p, "rb") as f:
+            for block in iter(lambda: f.read(8 * 1024 * 1024), b""):
+                h.update(block)
+        return h.hexdigest()
+
+    def execute(self, audio):
+        ok, path = self.hidden_validate(audio)
+        if not ok:
+            raise ValueError(str(path))
+        waveform, sample_rate = _load_audio_file(path)
+        print(_PREF + f"loaded '{os.path.basename(path)}' "
+              f"({waveform.shape[-1] / max(sample_rate, 1):.1f}s @ {sample_rate} Hz)", flush=True)
+        import torch
+
+        return {"ui": {}, "result": ({"waveform": waveform.unsqueeze(0),
+                                      "sample_rate": int(sample_rate)},)}
 
 
 class STSLyricsOptions:
@@ -237,9 +394,10 @@ class STSExportAll:
 
 
 NODE_CLASS_MAPPINGS = {cls.__name__: cls for cls in (
-    STSLyricsOptions, STSAlign, STSNudge, STSAudition, STSExportAll)}
+    STSLoadSong, STSLyricsOptions, STSAlign, STSNudge, STSAudition, STSExportAll)}
 
 NODE_DISPLAY_NAME_MAPPINGS = {
+    "STSLoadSong": "Your Song (upload / pick / link)",
     "STSLyricsOptions": "Lyrics & Options",
     "STSAlign": "Align Lyrics (forced alignment)",
     "STSNudge": "Nudge All Timestamps",
@@ -248,5 +406,373 @@ NODE_DISPLAY_NAME_MAPPINGS = {
 }
 
 WEB_DIRECTORY = "./web"
+
+# ---------------------------------------------------------------------------
+# Big-file-safe song delivery: chunked upload, link download, Kaggle import.
+# Songs land in ComfyUI's input folder and appear in the STSLoadSong list.
+# ---------------------------------------------------------------------------
+
+_UPLOADER_PAGE = """<!doctype html><html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>📤 Add a song — Song Timestamp Studio</title>
+<style>
+:root{color-scheme:dark}
+*{box-sizing:border-box}
+body{margin:0;background:#171717;color:#e6e6e6;font:16px/1.55 system-ui,'Segoe UI',Roboto,sans-serif;padding:24px}
+main{max-width:760px;margin:0 auto}
+h1{font-size:26px;margin:0 0 4px}h2{font-size:19px;margin:26px 0 8px;color:#9ad}
+.sub{color:#aaa;margin:0 0 18px}
+.card{background:#222;border:1px solid #383838;border-radius:12px;padding:18px;margin:14px 0}
+#drop{border:2px dashed #5a7;border-radius:12px;padding:26px;text-align:center;cursor:pointer;transition:background .15s}
+#drop.hover{background:#1c2a20}
+button{background:#2f6f4f;color:#fff;border:0;border-radius:8px;padding:10px 18px;font-size:16px;cursor:pointer}
+button:hover{background:#3a8a62}
+button:disabled{opacity:.5;cursor:default}
+#bar-wrap{background:#111;border-radius:8px;height:22px;overflow:hidden;margin:14px 0 6px;display:none}
+#bar{height:100%;width:0%;background:linear-gradient(90deg,#3a8a62,#7fd4a8);transition:width .2s}
+#bar.fail{background:#c0392b}
+#msg{min-height:24px;color:#bbb;white-space:pre-wrap}
+ol{margin:8px 0 0 20px;padding:0}
+li{margin:6px 0}
+.urlrow{display:flex;gap:8px}
+input[type=text]{flex:1;background:#111;border:1px solid #444;color:#eee;border-radius:8px;padding:10px;font-size:15px}
+ul{list-style:none;margin:8px 0 0;padding:0}
+li.song{display:flex;justify-content:space-between;align-items:center;gap:10px;padding:7px 10px;background:#1c1c1c;border-radius:8px;margin:6px 0;flex-wrap:wrap}
+li.song b{word-break:break-all}
+.tag{font-size:12px;padding:2px 8px;border-radius:99px;background:#2f6f4f}
+.tag.src{background:#3a5a7f}
+.mini{font-size:13px;color:#888}
+.err{color:#ff9c93}
+.ok{color:#8fe3b0}
+</style></head><body><main>
+<h1>📤 Add a song to the studio</h1>
+<p class="sub">Songs travel in small chunks with automatic retries, so big files work even on a
+slow or shaky connection. <b>Keep this tab open until it says 100%.</b></p>
+
+<div class="card">
+<ol>
+<li>Add the song here (file, or a link).</li>
+<li>Go back to the <b>canvas tab</b> — the song appears in the <b>1 · Your song</b> node list by itself.</li>
+<li>Pick it and press <b>Run</b>.</li>
+</ol>
+</div>
+
+<div class="card">
+<div id="drop">📄 <b>Drop a song here</b> or click to choose<br>
+<span class="mini">WAV · FLAC · MP3 · OGG · M4A — up to 2 GB</span>
+<input type="file" id="file" accept=".wav,.mp3,.flac,.ogg,.m4a,.aac,.opus,.aiff,.aif,.wma,audio/*" hidden>
+</div>
+<div id="bar-wrap"><div id="bar"></div></div>
+<div id="msg">Ready.</div>
+</div>
+
+<div class="card">
+<h2 style="margin-top:0">…or grab it from a link</h2>
+<div class="urlrow">
+<input type="text" id="url" placeholder="https://…/my-song.mp3" spellcheck="false">
+<button id="fetchbtn">⬇️ Download</button>
+</div>
+<p class="mini">The studio server downloads it at full speed — nothing travels through your own connection.</p>
+</div>
+
+<div class="card">
+<h2 style="margin-top:0">Songs already on the studio server</h2>
+<p class="mini">Green = ready to pick on the canvas. Blue = found in your Kaggle files — press Import once.</p>
+<ul id="songs"></ul>
+</div>
+
+<script>
+const CHUNK = 8 * 1024 * 1024;            // 8 MB per piece
+const CHUNK_TIMEOUT_MS = 300000;          // 5 min per piece
+const RETRIES = 5;
+const drop = document.getElementById('drop'), fileEl = document.getElementById('file');
+const barWrap = document.getElementById('bar-wrap'), bar = document.getElementById('bar');
+const msg = document.getElementById('msg'), songsEl = document.getElementById('songs');
+let busy = false;
+
+function setBar(pct, fail){ barWrap.style.display='block'; bar.style.width=(pct*100).toFixed(1)+'%';
+  bar.classList.toggle('fail', !!fail); }
+function say(text, cls){ msg.innerHTML = text; msg.className = cls || ''; }
+const sleep = (ms) => new Promise(r => setTimeout(r, ms));
+
+async function upChunk(i, n, name, size, blob){
+  for (let t = 1; ; t++){
+    const ctl = new AbortController();
+    const timer = setTimeout(() => ctl.abort('timeout'), CHUNK_TIMEOUT_MS);
+    try {
+      const q = `i=${i}&n=${n}&name=${encodeURIComponent(name)}&size=${size}`;
+      const r = await fetch('/sts/upload/chunk?' + q, {method:'POST', body: blob,
+        headers:{'Content-Type':'application/octet-stream'}, signal: ctl.signal});
+      clearTimeout(timer);
+      if (!r.ok){ const e = await r.json().catch(() => ({})); throw new Error(e.error || ('HTTP ' + r.status)); }
+      return;
+    } catch (err) {
+      clearTimeout(timer);
+      if (t > RETRIES) throw err;
+      say(`piece ${i+1} of ${n} wobbled (${err.message}) — retry ${t}/${RETRIES}…`);
+      await sleep(1200 * t);
+    }
+  }
+}
+
+async function uploadFile(file){
+  if (busy) return; busy = true;
+  bar.classList.remove('fail'); setBar(0); say(`Uploading <b>${file.name}</b> (${(file.size/1048576).toFixed(1)} MB)…`);
+  try {
+    const n = Math.max(1, Math.ceil(file.size / CHUNK));
+    let done = 0;
+    for (let i = 0; i < n; i++){
+      const blob = file.slice(i * CHUNK, Math.min(file.size, (i + 1) * CHUNK));
+      await upChunk(i, n, file.name, file.size, blob);
+      done += blob.size; setBar(done / file.size);
+      say(`Uploading <b>${file.name}</b>… ${Math.round(100 * done / file.size)}% (piece ${i+1}/${n})`);
+    }
+    const r = await fetch('/sts/upload/finish', {method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({name: file.name, n, size: file.size})});
+    const fin = await r.json();
+    if (!fin.ok) throw new Error(fin.error || ('HTTP ' + r.status));
+    setBar(1); say(`✅ <b>${fin.filename}</b> is on the studio server. Go to the canvas tab and pick it in the <b>1 · Your song</b> node.`, 'ok');
+    announce(fin.filename); await loadSongs();
+  } catch (err) {
+    setBar(1, true);
+    say(`❌ Upload failed: ${err.message}<br>Check your internet, then choose the file again — finished pieces are kept, so it continues where it stopped.`, 'err');
+  } finally { busy = false; }
+}
+
+async function fetchUrl(){
+  const url = document.getElementById('url').value.trim();
+  if (!url || busy) return; busy = true;
+  setBar(0.02); say('Server is downloading from the link…');
+  try {
+    const r = await fetch('/sts/fetch_url', {method:'POST',
+      headers:{'Content-Type':'application/json'}, body: JSON.stringify({url})});
+    const j = await r.json();
+    if (!j.ok) throw new Error(j.error || ('HTTP ' + r.status));
+    setBar(1); say(`✅ <b>${j.filename}</b> downloaded to the studio server. Pick it on the canvas.`, 'ok');
+    announce(j.filename); await loadSongs();
+  } catch (err) {
+    setBar(1, true); say('❌ ' + err.message, 'err');
+  } finally { busy = false; }
+}
+
+function announce(name){ try { new BroadcastChannel('sts-uploads').postMessage({name}); } catch {} }
+
+async function importSong(path, btn){
+  btn.disabled = true; btn.textContent = 'importing…';
+  try {
+    const r = await fetch('/sts/import', {method:'POST',
+      headers:{'Content-Type':'application/json'}, body: JSON.stringify({path})});
+    const j = await r.json();
+    if (!j.ok) throw new Error(j.error || ('HTTP ' + r.status));
+    announce(j.filename); await loadSongs();
+  } catch (err) { alert('Import failed: ' + err.message); btn.disabled = false; btn.textContent = 'Import'; }
+}
+
+async function loadSongs(){
+  songsEl.innerHTML = '<li class="mini">loading…</li>';
+  try {
+    const r = await fetch('/sts/songs', {cache:'no-store'});
+    const data = await r.json();
+    let html = '';
+    for (const name of data.input || [])
+      html += `<li class="song"><b>${name}</b><span class="tag">ready</span></li>`;
+    for (const path of data.kaggle || [])
+      html += `<li class="song"><b>${path.split('/').pop()}</b><span class="mini">${path}</span>` +
+              `<button onclick="importSong(this.dataset.p, this)" data-p="${path}">Import</button><span class="tag src">Kaggle</span></li>`;
+    songsEl.innerHTML = html || '<li class="mini">No songs yet — add one above.</li>';
+  } catch (err) { songsEl.innerHTML = `<li class="err">Could not load the song list: ${err.message}</li>`; }
+}
+
+drop.addEventListener('click', () => fileEl.click());
+fileEl.addEventListener('change', () => fileEl.files[0] && uploadFile(fileEl.files[0]));
+['dragover','dragenter'].forEach(ev => drop.addEventListener(ev, e => { e.preventDefault(); drop.classList.add('hover'); }));
+['dragleave','drop'].forEach(ev => drop.addEventListener(ev, e => { e.preventDefault(); drop.classList.remove('hover'); }));
+drop.addEventListener('drop', e => e.dataTransfer.files[0] && uploadFile(e.dataTransfer.files[0]));
+document.getElementById('fetchbtn').addEventListener('click', fetchUrl);
+document.getElementById('url').addEventListener('keydown', e => e.key === 'Enter' && fetchUrl());
+loadSongs();
+</script></main></body></html>"""
+
+
+def _register_routes():
+    try:
+        from aiohttp import web
+        from server import PromptServer
+    except Exception:
+        return  # engine-only import (tests) — routes need the running server
+
+    routes = PromptServer.instance.routes
+
+    @routes.get("/sts/health")
+    async def sts_health(request):  # noqa: ANN202
+        return web.json_response({"ok": True, "pack": "TimestampStudio"})
+
+    @routes.get("/sts_uploader")
+    async def sts_uploader(request):  # noqa: ANN202
+        return web.Response(text=_UPLOADER_PAGE, content_type="text/html")
+
+    @routes.get("/sts/songs")
+    async def sts_songs(request):  # noqa: ANN202
+        kaggle = []
+        for root_dir in _scan_roots():
+            for dirpath, dirnames, filenames in os.walk(root_dir):
+                dirnames[:] = [d for d in dirnames if not d.startswith(".")]
+                for fn in filenames:
+                    if _is_audio_name(fn) and not fn.startswith("."):
+                        kaggle.append(os.path.join(dirpath, fn))
+        return web.json_response({"input": _list_input_songs(),
+                                  "kaggle": sorted(set(kaggle))[:300]})
+
+    @routes.post("/sts/upload/chunk")
+    async def sts_chunk(request):  # noqa: ANN202
+        q = request.rel_url.query
+        try:
+            idx, total = int(q["i"]), int(q["n"])
+            size = int(q.get("size") or 0)
+        except Exception:
+            return web.json_response({"error": "bad piece numbers"}, status=400)
+        if total < 1 or total > 4096 or not (0 <= idx < total):
+            return web.json_response({"error": "piece index out of range"}, status=400)
+        if size > MAX_SONG_BYTES:
+            return web.json_response({"error": "file is over the 2 GB limit"}, status=413)
+        name = _safe_song_name(q.get("name"))
+        parts = os.path.join(_temp_dir(), "sts_parts", f"{name}.{total}.{size}")
+        os.makedirs(parts, exist_ok=True)
+        path = os.path.join(parts, f"{idx:05d}.part")
+        written = 0
+        try:
+            with open(path, "wb") as out:
+                async for block in request.content.iter_chunked(1 << 20):
+                    written += len(block)
+                    if written > 64 * 1024 * 1024:
+                        raise ValueError("piece bigger than 64 MB")
+                    out.write(block)
+        except Exception as exc:
+            try:
+                os.remove(path)
+            except OSError:
+                pass
+            return web.json_response({"error": f"piece write failed: {exc}"}, status=500)
+        return web.json_response({"ok": True, "got": idx, "bytes": written})
+
+    @routes.post("/sts/upload/finish")
+    async def sts_finish(request):  # noqa: ANN202
+        try:
+            body = await request.json()
+        except Exception:
+            return web.json_response({"error": "bad request"}, status=400)
+        name = _safe_song_name(body.get("name"))
+        total, size = int(body.get("n") or 0), int(body.get("size") or 0)
+        parts = os.path.join(_temp_dir(), "sts_parts", f"{name}.{total}.{size}")
+        if not total or not os.path.isdir(parts):
+            return web.json_response(
+                {"error": "no uploaded pieces found — start the upload again"}, status=400)
+        idxs = sorted(int(f[:-5]) for f in os.listdir(parts) if f.endswith(".part"))
+        if idxs != list(range(total)):
+            missing = [i for i in range(total) if i not in set(idxs)]
+            preview = ", ".join(str(i) for i in missing[:5]) + ("…" if len(missing) > 5 else "")
+            return web.json_response(
+                {"error": f"missing pieces [{preview}] — press retry on the page"}, status=409)
+        dest = _unique_path(os.path.join(_input_dir(), name))
+        try:
+            with open(dest, "wb") as out:
+                for i in idxs:
+                    with open(os.path.join(parts, f"{i:05d}.part"), "rb") as f:
+                        shutil.copyfileobj(f, out, 1 << 20)
+        except Exception as exc:
+            try:
+                os.remove(dest)
+            except OSError:
+                pass
+            return web.json_response({"error": f"assemble failed: {exc}"}, status=500)
+        wrote = os.path.getsize(dest)
+        shutil.rmtree(parts, ignore_errors=True)
+        if size and wrote != size:
+            os.remove(dest)
+            return web.json_response(
+                {"error": f"size check failed ({wrote} vs {size} bytes) — upload again"}, status=400)
+        print(_PREF + f"song uploaded: {os.path.basename(dest)} ({wrote / 1048576:.1f} MB)", flush=True)
+        return web.json_response({"ok": True, "filename": os.path.basename(dest), "bytes": wrote})
+
+    @routes.post("/sts/fetch_url")
+    async def sts_fetch_url(request):  # noqa: ANN202
+        try:
+            body = await request.json()
+        except Exception:
+            return web.json_response({"error": "bad request"}, status=400)
+        url = str(body.get("url") or "").strip()
+        if not re.match(r"^https?://", url, re.I):
+            return web.json_response({"error": "only http(s) links work"}, status=400)
+        import aiohttp
+
+        timeout = aiohttp.ClientTimeout(total=1800, sock_read=180)
+        dest = tmp = None
+        try:
+            async with aiohttp.ClientSession(timeout=timeout) as session:
+                async with session.get(url, headers={"User-Agent": "TimestampStudio/2.0"}) as resp:
+                    if resp.status != 200:
+                        return web.json_response(
+                            {"error": f"that link returned HTTP {resp.status}"}, status=400)
+                    ctype = resp.headers.get("Content-Type", "").lower()
+                    if "text/html" in ctype:
+                        return web.json_response(
+                            {"error": "that link is a web page, not a song file"}, status=400)
+                    url_path = urllib.parse.urlparse(url).path
+                    raw = os.path.basename(urllib.parse.unquote(url_path)) or body.get("name") or "song"
+                    name = _safe_song_name(raw)
+                    if not _is_audio_name(name):
+                        ext = {"audio/wav": ".wav", "audio/x-wav": ".wav", "audio/vnd.wave": ".wav",
+                               "audio/mpeg": ".mp3", "audio/flac": ".flac", "audio/x-flac": ".flac",
+                               "audio/ogg": ".ogg", "audio/mp4": ".m4a", "audio/aac": ".aac",
+                               "audio/opus": ".opus", "audio/webm": ".webm"}.get(
+                                   ctype.split(";")[0].strip(), "")
+                        if not ext:
+                            return web.json_response(
+                                {"error": f"don't recognise that file type ({ctype or 'unknown'})"},
+                                status=400)
+                        name += ext
+                    dest = _unique_path(os.path.join(_input_dir(), name))
+                    tmp = dest + ".part"
+                    written = 0
+                    with open(tmp, "wb") as out:
+                        async for block in resp.content.iter_chunked(1 << 20):
+                            written += len(block)
+                            if written > MAX_SONG_BYTES:
+                                raise ValueError("file is over the 2 GB limit")
+                            out.write(block)
+            os.replace(tmp, dest)
+            tmp = None
+        except asyncio.TimeoutError:
+            return web.json_response({"error": "the link was too slow / timed out"}, status=504)
+        except Exception as exc:
+            return web.json_response({"error": f"download failed: {exc}"}, status=502)
+        finally:
+            if tmp and os.path.exists(tmp):
+                try:
+                    os.remove(tmp)
+                except OSError:
+                    pass
+        print(_PREF + f"song downloaded from link: {os.path.basename(dest)}", flush=True)
+        return web.json_response({"ok": True, "filename": os.path.basename(dest)})
+
+    @routes.post("/sts/import")
+    async def sts_import(request):  # noqa: ANN202
+        try:
+            body = await request.json()
+        except Exception:
+            return web.json_response({"error": "bad request"}, status=400)
+        src = os.path.abspath(str(body.get("path") or ""))
+        allowed = tuple(os.path.abspath(r) + os.sep for r in _scan_roots())
+        if not (src.startswith(allowed) and os.path.isfile(src) and _is_audio_name(src)):
+            return web.json_response({"error": "that path is not an importable song"}, status=400)
+        if os.path.getsize(src) > MAX_SONG_BYTES:
+            return web.json_response({"error": "file is over the 2 GB limit"}, status=413)
+        dest = _unique_path(os.path.join(_input_dir(), _safe_song_name(os.path.basename(src))))
+        shutil.copyfile(src, dest)
+        return web.json_response({"ok": True, "filename": os.path.basename(dest)})
+
+
+_register_routes()
 
 __all__ = ["NODE_CLASS_MAPPINGS", "NODE_DISPLAY_NAME_MAPPINGS", "WEB_DIRECTORY"]

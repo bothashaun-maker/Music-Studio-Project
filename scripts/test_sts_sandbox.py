@@ -83,7 +83,7 @@ def wait_server(timeout=180):
 
 def api_graph(nudge=0.0):
     return {"prompt": {
-        "1": {"class_type": "LoadAudio", "inputs": {"audio": "test_song.wav"}},
+        "1": {"class_type": "STSLoadSong", "inputs": {"audio": "test_song.wav"}},
         "2": {"class_type": "STSLyricsOptions", "inputs": {
             "song_name": "truth_song", "lyrics": LYRICS,
             "model": "base", "language": "en", "isolate_vocals": False}},
@@ -146,9 +146,17 @@ def main():
     try:
         check("ComfyUI server ready", wait_server(), f"port {PORT}")
         info = json.loads(urllib.request.urlopen(BASE + "/object_info", timeout=30).read().decode())
-        missing = [n for n in ("STSLyricsOptions", "STSAlign", "STSNudge", "STSAudition", "STSExportAll")
+        missing = [n for n in ("STSLoadSong", "STSLyricsOptions", "STSAlign", "STSNudge", "STSAudition", "STSExportAll")
                    if n not in info]
-        check("all 5 STS nodes registered", not missing, str(missing))
+        check("all 6 STS nodes registered", not missing, str(missing))
+        health = json.loads(urllib.request.urlopen(BASE + "/sts/health", timeout=10).read().decode())
+        check("/sts/health route live", health.get("ok") is True, str(health))
+        songs = json.loads(urllib.request.urlopen(BASE + "/sts/songs", timeout=10).read().decode())
+        check("/sts/songs lists the test song", "test_song.wav" in songs.get("input", []), str(songs.get("input")))
+        with urllib.request.urlopen(BASE + "/sts_uploader", timeout=10) as r:
+            page = r.read().decode()
+        check("/sts_uploader page served with the chunked uploader",
+              r.status == 200 and "/sts/upload/chunk" in page and "RETRIES" in page)
         canvases = os.listdir(os.path.join(PACK, "web"))
         check("canvas + web extension served in pack", "sts-studio.json" in canvases and "open_workflow.js" in canvases)
 

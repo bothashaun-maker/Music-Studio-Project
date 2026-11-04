@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Package Music revision 12 + the Timestamp Studio canvas notebook."""
+"""Package Music revision 13 + the Timestamp Studio canvas v2.0 notebook."""
 import os
 import shutil
 import zipfile
@@ -21,8 +21,8 @@ with zipfile.ZipFile(zip_path, "w", zipfile.ZIP_DEFLATED) as zf:
     zf.write("/home/z/my-project/scripts/archive/READ-ME-FIRST-canvas.md", "READ-ME-FIRST.md")
 print("wrote:", zip_path, f"{os.path.getsize(zip_path) / 1024:.1f} KB")
 
-# 3 · full Music repo revision 12 zip
-repo_zip = os.path.join(DL, "yue2-music-revision-12.zip")
+# 3 · full Music repo revision 13 zip
+repo_zip = os.path.join(DL, "yue2-music-revision-13.zip")
 skip_dirs = {"__pycache__", ".git", ".ipynb_checkpoints"}
 with zipfile.ZipFile(repo_zip, "w", zipfile.ZIP_DEFLATED) as zf:
     count = 0
@@ -33,3 +33,9 @@ with zipfile.ZipFile(repo_zip, "w", zipfile.ZIP_DEFLATED) as zf:
             zf.write(full, os.path.relpath(full, REPO))
             count += 1
 print("wrote:", repo_zip, f"{os.path.getsize(repo_zip) / 1024:.1f} KB,", count, "files")
+
+# 4 · remove stale revision-12 zip so only current versions remain
+stale = os.path.join(DL, "yue2-music-revision-12.zip")
+if os.path.exists(stale):
+    os.remove(stale)
+    print("removed stale:", os.path.basename(stale))

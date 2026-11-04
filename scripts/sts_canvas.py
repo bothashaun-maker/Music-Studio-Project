@@ -1,21 +1,27 @@
 """Builder for the pre-installed Song Timestamp Studio canvas.
 
 The graph references the TimestampStudio node pack plus ComfyUI's native
-LoadAudio / PreviewAudio nodes. Every stage is a real, individually executed
-node on a visible, connected graph — nothing is collapsed into one wrapper.
+PreviewAudio node. Every stage is a real, individually executed node on a
+visible, connected graph — nothing is collapsed into one wrapper.
 
-    1 LoadAudio          native — upload the song (WAV / FLAC / MP3)
+    1 STSLoadSong        your song — pick, paste a link, or upload (big-file safe)
     2 STSLyricsOptions   your lyrics + model / language / isolation / song name
     3 STSAlign           forced alignment  ← audio + opts
     4 STSNudge           shift everything at once
     5 STSExportAll       every format + ZIP into the output folder
     6 STSAudition        ~8 s around one line  ← result
     7 PreviewAudio       native — hear the audition
+
+Node 1 replaces ComfyUI's native LoadAudio because its single-shot upload button
+dies on big songs over the Cloudflare tunnel ("Fetch timeout"). Songs now arrive
+through the /sts_uploader page (chunked, resumable) or a link, and LoadAudio
+itself stays available in the node menu for small files.
 """
 import copy
 import json
 
 HEADER = "Song Timestamp Studio — your lyrics onto exact seconds"
+NO_SONG = "(no songs yet — open the 📤 upload link from Kaggle)"
 
 
 def _node(nodes, nid, kind, pos, inputs, outputs, widgets, size=(340, 120), title=None):
@@ -53,8 +59,8 @@ def _finish(nodes, links):
 
 def build_studio_canvas(example_lyrics):
     nodes, links = [], []
-    _node(nodes, 1, "LoadAudio", (40, 120), [], [("AUDIO", "AUDIO")], ["", "audio"],
-          (420, 180), title="1 · Upload your song (WAV / FLAC / MP3)")
+    _node(nodes, 1, "STSLoadSong", (40, 120), [], [("AUDIO", "AUDIO")], [NO_SONG],
+          (440, 160), title="1 · Your song — pick from the list · paste a link · 📤 upload")
     _node(nodes, 2, "STSLyricsOptions", (40, 420), [], [("STS_OPTS", "STS_OPTS")],
           ["my_song", example_lyrics, "auto", "auto", False], (440, 420),
           title="2 · Your lyrics (keep the [Verse] / [Chorus] tags)")
