@@ -1,0 +1,738 @@
+     1→"""SOURCE TEMPLATE for custom_nodes/KaggleYuE2/__init__.py.
+     2→
+     3→native_yue2.setup.write_comfy_pack() copies this file verbatim into the ComfyUI
+     4→custom-node directory at setup time. The pack wraps the proven native FP16 YuE2
+     5→engine (native_yue2.engine, yue2_infer 0.1.5) as real, individually executed
+     6→ComfyUI stages: load engine -> plan score -> song tokens -> acoustic latents ->
+     7→VAE decode -> save song. Weights, precision, attention layout, token budgets,
+     8→solver defaults and saved-run artifacts are identical to the managed engine.
+     9→"""
+    10→import gc
+    11→import json
+    12→import os
+    13→from pathlib import Path
+    14→import sys
+    15→import tempfile
+    16→import time
+    17→import uuid
+    18→
+    19→import numpy as np
+    20→import torch
+    21→import soundfile as sf
+    22→
+    23→import folder_paths
+    24→import comfy.model_management
+    25→
+    26→# --- native engine bootstrap -------------------------------------------------
+    27→# The notebook launch cell passes these; standalone reuse falls back to the
+    28→# documented Kaggle paths. Import native_yue2 from the extracted support tree.
+    29→SUPPORT = Path(os.environ.get("YUE2_SUPPORT_DIR", "/kaggle/temp/yue2_native_support"))
+    30→if str(SUPPORT) not in sys.path and SUPPORT.is_dir():
+    31→    sys.path.insert(0, str(SUPPORT))
+    32→RUNTIME_ROOT = Path(os.environ.get("YUE2_RUNTIME_ROOT", "/kaggle/temp/yue2_native"))
+    33→OUTPUT_ROOT = Path(os.environ.get("YUE2_OUTPUT_ROOT", "/kaggle/working/yue2_native/runs"))
+    34→ENGINE_SCRIPT = Path(os.environ.get("YUE2_ENGINE_SCRIPT", SUPPORT / "native_yue2/engine.py"))
+    35→
+    36→import native_yue2.engine as engine  # Applies the T4 patches; loads nothing.
+    37→import native_yue2.process as proc
+    38→
+    39→try:  # ComfyUI interrupt type moved between versions.
+    40→    from comfy.model_management import InterruptProcessingException
+    41→except ImportError:  # pragma: no cover - validated against the pinned checkout
+    42→    from comfy_execution.interrupts import InterruptProcessingException
+    43→
+    44→_STATE = {"lock": None, "run": None}
+    45→STAGE_TIMES = {}
+    46→
+    47→CATEGORY = "YuE2/Kaggle"
+    48→COT_MODES = ["Direct to audio", "Melody score", "Full melody+chords"]
+    49→COT_MAP = {"Direct to audio": "off", "Melody score": "melody", "Full melody+chords": "full"}
+    50→DURATION_LABELS = [label for label, _ in engine.DURATION_CHOICES]
+    51→METHODS = ["euler", "midpoint"]
+    52→
+    53→
+    54→def _pipe():
+    55→    if engine.pipe is None:
+    56→        raise RuntimeError("Run the Load YuE2 Engine node first; no engine is loaded.")
+    57→    return engine.pipe
+    58→
+    59→
+    60→def _status_text():
+    61→    attention = dict(getattr(engine, "ATTENTION_STATUS", {}))
+    62→    ar = dict(getattr(engine, "AR_DIAGNOSTICS", {}))
+    63→    return f"attention={attention} ar={ar}"
+    64→
+    65→
+    66→def _ensure_run():
+    67→    if _STATE["run"] is None:
+    68→        raise RuntimeError("Add the YuE2 Run Context node; every song needs one run folder.")
+    69→    return _STATE["run"]
+    70→
+    71→
+    72→def _new_run(seed):
+    73→    directory = OUTPUT_ROOT / (time.strftime("%Y%m%dT%H%M%SZ", time.gmtime()) + "-" + uuid.uuid4().hex[:10])
+    74→    directory.mkdir(parents=True, exist_ok=False)
+    75→    from yue2.storage import write_json
+    76→    write_json(directory / "status.json", {"status": "started"})
+    77→    run = {"directory": directory, "seed": seed, "notes": [], "settings": {},
+    78→           "cover_source": None}
+    79→    _STATE["run"] = run
+    80→    STAGE_TIMES.clear()
+    81→    return run
+    82→
+    83→
+    84→def _save_run_json(name, payload):
+    85→    from yue2.storage import write_json
+    86→    write_json(_ensure_run()["directory"] / name, payload)
+    87→
+    88→
+    89→def _release_gpu_cache():
+    90→    gc.collect()
+    91→    if torch.cuda.is_available():
+    92→        torch.cuda.empty_cache()
+    93→
+    94→
+    95→def _interrupted():
+    96→    comfy.model_management.throw_exception_if_processing_interrupted()
+    97→    return engine._cancelled()
+    98→
+    99→
+   100→def _cancelled_run(directory):
+   101→    _release_gpu_cache()
+   102→    from yue2.storage import write_json
+   103→    write_json(directory / "status.json", {"status": "cancelled", "message": "Saved stages retained"})
+   104→
+   105→
+   106→def _require_gpu_room():
+   107→    """Preflight against other GPU users, counting our own resident engine."""
+   108→    proc.check_gpu_room(include_pid=os.getpid())
+   109→
+   110→
+   111→def _acquire_exclusive_engine():
+   112→    """One engine at a time: stop verified Gradio engines, then own the lock.
+   113→
+   114→    The ComfyUI server process is launched with ``python -u main.py ...`` and
+   115→    YUE2_OUTPUT_ROOT in its environment, so proc.identity() can verify it the
+   116→    same way it verifies the managed engine script.
+   117→    """
+   118→    proc.stop_owned(RUNTIME_ROOT, ENGINE_SCRIPT, OUTPUT_ROOT)
+   119→    if _STATE["lock"] is None:
+   120→        main_script = _comfy_main_script()
+   121→        _STATE["lock"] = proc.acquire_engine_lock(RUNTIME_ROOT, main_script, OUTPUT_ROOT)
+   122→
+   123→
+   124→def _comfy_main_script():
+   125→    for argument in sys.argv:
+   126→        if argument.endswith("main.py"):
+   127→            return Path(argument).resolve()
+   128→    raise RuntimeError("Cannot verify the ComfyUI server process; launch it with python -u main.py")
+   129→
+   130→
+   131→def _semantic_reporter(run, budget):
+   132→    directory = run["directory"]
+   133→    start = time.perf_counter()
+   134→    live = {"tokens": [], "first": None, "last": start}
+   135→
+   136→    def report(phase, token):
+   137→        if phase != "semantic":
+   138→            return
+   139→        if _interrupted():
+   140→            raise InterruptProcessingException("YuE2 song generation was interrupted")
+   141→        now = time.perf_counter()
+   142→        if live["first"] is None:
+   143→            live["first"] = now
+   144→        offset = getattr(engine.yproto, "CODEC_OFFSET")
+   145→        size = getattr(engine.yproto, "CODEC_SIZE")
+   146→        if offset <= token < offset + size:
+   147→            live["tokens"].append(int(token) - offset)
+   148→        if len(live["tokens"]) != 1 and now - live["last"] < 5 and token != engine.yproto.MUSIC_END:
+   149→            return
+   150→        decode_time = now - live["first"]
+   151→        rate = (len(live["tokens"]) - 1) / decode_time if decode_time > 0 and len(live["tokens"]) > 1 else None
+   152→        snapshot = {
+   153→            "status": "partial_tokens_only", "content_tokens": len(live["tokens"]),
+   154→            "token_budget": budget, "represented_audio_seconds": len(live["tokens"]) / 25,
+   155→            "elapsed_seconds": now - start, "decode_tokens_per_second": rate,
+   156→            "time_to_first_token_seconds": live["first"] - start,
+   157→            "attention_dispatch": dict(getattr(engine, "ATTENTION_STATUS", {})),
+   158→        }
+   159→        _save_run_json("semantic-progress.json", snapshot)
+   160→        partial = directory / "semantic.partial.writing"
+   161→        with partial.open("wb") as stream:
+   162→            np.save(stream, np.asarray(live["tokens"], dtype=np.int32), allow_pickle=False)
+   163→        partial.replace(directory / "semantic.partial.npy")
+   164→        print(f"[YuE2 live] tokens {len(live['tokens'])}/{budget} | "
+   165→              f"{len(live['tokens'])/25:.1f}s audio | "
+   166→              f"{('%.1f tok/s' % rate) if rate else 'measuring'} | {_status_text()}", flush=True)
+   167→        live["last"] = now
+   168→
+   169→    return report
+   170→
+   171→
+   172→# =============================================================================
+   173→# Nodes
+   174→# =============================================================================
+   175→class YuE2RunContext:
+   176→    """One saved run folder and one seed for the whole song, like the engine UI."""
+   177→
+   178→    @classmethod
+   179→    def INPUT_TYPES(cls):
+   180→        return {"required": {"seed": ("INT", {"default": -1, "min": -1, "max": 2**31 - 1})}}
+   181→
+   182→    RETURN_TYPES = ("YUE2_RUN",)
+   183→    FUNCTION = "execute"
+   184→    CATEGORY = CATEGORY
+   185→    DESCRIPTION = ("Creates this run's folder under /kaggle/working/yue2_native/runs and "
+   186→                   "fixes one seed for planning, tokens and acoustics. Seed -1 draws a new one.")
+   187→
+   188→    def execute(self, seed):
+   189→        comfy.model_management.throw_exception_if_processing_interrupted()
+   190→        current = abs(int(seed)) % (2**31 - 1) if seed is not None and int(seed) != -1 else int(np.random.randint(0, 2**31 - 1))
+   191→        OUTPUT_ROOT.mkdir(parents=True, exist_ok=True)
+   192→        run = _new_run(current)
+   193→        print(f"[YuE2] Run {run['directory'].name}; seed {current}", flush=True)
+   194→        return (run,)
+   195→
+   196→
+   197→class YuE2LoadEngine:
+   198→    """Loads the pinned FP16 YuE2 engine from your saved assets, exclusively."""
+   199→
+   200→    @classmethod
+   201→    def INPUT_TYPES(cls):
+   202→        return {"required": {"run": ("YUE2_RUN",)},
+   203→                "optional": {"keep_loaded": ("BOOLEAN", {"default": True, "label_on": "keep for next song",
+   204→                                                         "label_off": "release after each song"})}}
+   205→
+   206→    RETURN_TYPES = ("YUE2_ENGINE",)
+   207→    FUNCTION = "execute"
+   208→    CATEGORY = CATEGORY
+   209→    OUTPUT_NODE = True
+   210→    DESCRIPTION = ("Stops verified Gradio engines, owns the engine lock, checks GPU memory, "
+   211→                   "then loads YuE2-3B FP16 on GPU 0 with the CUDA-graph decoder. Reuse keeps "
+   212→                   "the transformer resident between songs.")
+   213→
+   214→    def execute(self, run, keep_loaded=True):
+   215→        directory = run["directory"]
+   216→        from yue2.storage import write_json
+   217→        try:
+   218→            if engine.pipe is not None:
+   219→                print("[YuE2] Engine already loaded in this server; reusing it.", flush=True)
+   220→                _require_gpu_room()
+   221→                return {"ui": {"text": ["YuE2 engine already loaded (reused)."]}, "result": (True,)}
+   222→            _acquire_exclusive_engine()
+   223→            _require_gpu_room()
+   224→            started = time.perf_counter()
+   225→            engine.initialize_pipeline()
+   226→            STAGE_TIMES["engine_load"] = time.perf_counter() - started
+   227→            message = (f"YuE2 engine loaded in {STAGE_TIMES['engine_load']:.1f}s | {_status_text()}")
+   228→            print("[YuE2] " + message, flush=True)
+   229→            if not keep_loaded:
+   230→                _STATE["release_after"] = True
+   231→            return {"ui": {"text": [message]}, "result": (True,)}
+   232→        except InterruptProcessingException:
+   233→            _cancelled_run(directory)
+   234→            raise
+   235→        except InterruptedError:
+   236→            _cancelled_run(directory)
+   237→            raise InterruptProcessingException("YuE2 engine load was interrupted")
+   238→        except Exception:
+   239→            write_json(directory / "status.json", {"status": "failed", "error": "engine_load", "stage_times": dict(STAGE_TIMES)})
+   240→            raise
+   241→
+   242→
+   243→class YuE2StyleLyrics:
+   244→    """Style prompt and section-tagged lyrics, exactly as the engine UI expects."""
+   245→
+   246→    @classmethod
+   247→    def INPUT_TYPES(cls):
+   248→        return {"required": {
+   249→            "style": ("STRING", {"default": "", "multiline": True,
+   250→                                 "placeholder": "Genre, instruments, mood, vocal direction"}),
+   251→            "lyrics": ("STRING", {"default": "", "multiline": True,
+   252→                                  "placeholder": "[Verse]\\n...\\n\\n[Chorus]\\n..."})}}
+   253→
+   254→    RETURN_TYPES = ("YUE2_PROMPT",)
+   255→    FUNCTION = "execute"
+   256→    CATEGORY = CATEGORY
+   257→    DESCRIPTION = ("Write the style prompt and complete lyrics with section tags such as "
+   258→                   "[Verse], [Chorus], [Bridge] and [Outro]. Complete structures give the "
+   259→                   "model a real ending instead of a stop at the ceiling.")
+   260→
+   261→    def execute(self, style, lyrics):
+   262→        cleaned_style = (style or "").strip()
+   263→        cleaned_lyrics = (lyrics or "").strip()
+   264→        if not cleaned_style:
+   265→            raise ValueError("Please enter a style or genre prompt.")
+   266→        if not cleaned_lyrics:
+   267→            raise ValueError("Please provide song lyrics with section tags (e.g. [Verse], [Chorus]).")
+   268→        return ({"style": cleaned_style, "lyrics": cleaned_lyrics},)
+   269→
+   270→
+   271→class YuE2PlanScore:
+   272→    """Optional symbolic plan: direct, melody score, or full melody+chords."""
+   273→
+   274→    @classmethod
+   275→    def INPUT_TYPES(cls):
+   276→        return {"required": {
+   277→            "run": ("YUE2_RUN",),
+   278→            "engine": ("YUE2_ENGINE",),
+   279→            "prompt": ("YUE2_PROMPT",),
+   280→            "planning_mode": (COT_MODES, {"default": "Direct to audio"}),
+   281→            "cfg_scale": ("FLOAT", {"default": 1.0, "min": 1.0, "max": 8.0, "step": 0.1})}}
+   282→
+   283→    RETURN_TYPES = ("YUE2_PLAN",)
+   284→    FUNCTION = "execute"
+   285→    CATEGORY = CATEGORY
+   286→    DESCRIPTION = ("Builds the prompt prefix and, unless Direct to audio is selected, plans an "
+   287→                   "ABC score (800-token budget, 1200 for full mode) with the same caps as the "
+   288→                   "engine UI. The plan is saved into the run folder and checked for truncation.")
+   289→
+   290→    def execute(self, run, engine, prompt, planning_mode, cfg_scale):
+   291→        directory = run["directory"]
+   292→        from yue2.storage import write_json
+   293→        try:
+   294→            cot_mode = COT_MAP[planning_mode]
+   295→            pipe = _pipe()
+   296→            _release_gpu_cache()
+   297→            started = time.perf_counter()
+   298→            plan = pipe.plan(
+   299→                style=prompt["style"], lyrics=prompt["lyrics"], cot=cot_mode, abc=None,
+   300→                seed=run["seed"], abc_sampling={"max_tokens": 1200 if cot_mode == "full" else 800},
+   301→                cfg_scale=float(cfg_scale), cancelled=engine._cancelled)
+   302→            STAGE_TIMES["planning"] = time.perf_counter() - started
+   303→            plan.save(directory)
+   304→            if plan.truncated:
+   305→                raise ValueError("ABC score hit its token limit before an ending; the score was "
+   306→                                 "saved to the run folder. Choose Direct to audio, simplify the "
+   307→                                 "composition, or supply a complete Custom ABC score.")
+   308→            write_json(directory / "plan.json", {"mode": cot_mode, "abc_tokens": len(plan.abc_ids),
+   309→                                                 "prefix_tokens": len(plan.prefix), "truncated": plan.truncated,
+   310→                                                 "seconds": STAGE_TIMES["planning"]})
+   311→            print(f"[YuE2] Plan: {len(plan.abc_ids)} score tokens, prefix {len(plan.prefix)} "
+   312→                  f"in {STAGE_TIMES['planning']:.1f}s", flush=True)
+   313→            return (plan,)
+   314→        except InterruptedError:
+   315→            _cancelled_run(directory)
+   316→            raise InterruptProcessingException("Score planning was interrupted")
+   317→        except InterruptProcessingException:
+   318→            _cancelled_run(directory)
+   319→            raise
+   320→
+   321→
+   322→class YuE2CustomABC:
+   323→    """Supply or paste a complete ABC score instead of planning one."""
+   324→
+   325→    @classmethod
+   326→    def INPUT_TYPES(cls):
+   327→        return {"required": {"abc": ("STRING", {"default": "", "multiline": True})}}
+   328→
+   329→    RETURN_TYPES = ("YUE2_ABC",)
+   330→    FUNCTION = "execute"
+   331→    CATEGORY = CATEGORY
+   332→    DESCRIPTION = ("Paste an ABC score (from the planner, the ABC editor or a cover analysis) "
+   333→                   "and wire it into Generate Song Tokens. Planning is then promoted to melody "
+   334→                   "mode, exactly like the engine UI does.")
+   335→
+   336→    def execute(self, abc):
+   337→        cleaned = (abc or "").strip()
+   338→        if not cleaned:
+   339→            raise ValueError("The Custom ABC score is empty.")
+   340→        return (cleaned,)
+   341→
+   342→
+   343→class YuE2SongTokens:
+   344→    """Stage 2: autoregressive music tokens under the safety ceiling."""
+   345→
+   346→    @classmethod
+   347→    def INPUT_TYPES(cls):
+   348→        return {"required": {
+   349→            "run": ("YUE2_RUN",),
+   350→            "engine": ("YUE2_ENGINE",),
+   351→            "prompt": ("YUE2_PROMPT",),
+   352→            "maximum_song_length": (DURATION_LABELS, {"default": "Up to 8 min"})},
+   353→            "optional": {
+   354→                "plan": ("YUE2_PLAN",),
+   355→                "custom_abc": ("YUE2_ABC",)}}
+   356→
+   357→    RETURN_TYPES = ("YUE2_TOKENS",)
+   358→    FUNCTION = "execute"
+   359→    CATEGORY = CATEGORY
+   360→    DESCRIPTION = ("Generates music tokens with the FP16 CUDA-graph decoder. The length menu is "
+   361→                   "a safety ceiling, not a target: the model may end naturally earlier, and a "
+   362→                   "cutoff at the ceiling is reported as such. Progress and partial tokens are "
+   363→                   "saved into the run folder.")
+   364→
+   365→    def execute(self, run, engine, prompt, maximum_song_length, plan=None, custom_abc=None):
+   366→        directory = run["directory"]
+   367→        from yue2.storage import write_json
+   368→        try:
+   369→            pipe = _pipe()
+   370→            cleaned_abc = (custom_abc or "").strip() or None
+   371→            if plan is not None and cleaned_abc:
+   372→                raise ValueError("Wire either Plan Score or Custom ABC into Generate Song Tokens, not both.")
+   373→            target_max_tokens = engine.DURATION_MAP[maximum_song_length]
+   374→            if cleaned_abc:
+   375→                run["notes"].append("Custom ABC score supplied, so planning was promoted to melody mode.")
+   376→                started = time.perf_counter()
+   377→                plan = pipe.plan(style=prompt["style"], lyrics=prompt["lyrics"], cot="melody",
+   378→                                 abc=cleaned_abc, seed=run["seed"],
+   379→                                 abc_sampling={"max_tokens": 800},
+   380→                                 cfg_scale=1.0, cancelled=engine._cancelled)
+   381→                STAGE_TIMES["planning"] = time.perf_counter() - started
+   382→                plan.save(directory)
+   383→                if plan.truncated:
+   384→                    raise ValueError("The supplied ABC score is incomplete for the context window; "
+   385→                                     "it was saved to the run folder.")
+   386→            elif plan is None:
+   387→                plan = pipe.plan(style=prompt["style"], lyrics=prompt["lyrics"], cot="off", abc=None,
+   388→                                 seed=run["seed"], abc_sampling={"max_tokens": 800},
+   389→                                 cfg_scale=1.0, cancelled=engine._cancelled)
+   390→                plan.save(directory)
+   391→            if len(plan.prefix) + target_max_tokens > engine.yproto.CONTEXT:
+   392→                raise ValueError("Lyrics/score plus song budget exceed the 24,576-token context; shorten the prompt.")
+   393→
+   394→            if cleaned_abc and engine.COVER_STATE.get("abc") == cleaned_abc:
+   395→                run["cover_source"] = engine.COVER_STATE.get("metadata")
+   396→                write_json(directory / "cover_source.json", run["cover_source"])
+   397→
+   398→            guidance = float(getattr(plan.request, "guidance", 1.0) or 1.0)
+   399→            write_json(directory / "settings.json", {
+   400→                "style": prompt["style"], "lyrics": prompt["lyrics"], "abc": cleaned_abc,
+   401→                "mode": "off" if plan is None or (not cleaned_abc and getattr(plan.request, "cot", "off") == "off") else "planned",
+   402→                "seed": run["seed"], "max_tokens": target_max_tokens,
+   403→                "max_seconds": target_max_tokens / 25, "ode_steps": 16, "ode_method": "euler",
+   404→                "cfg_scale": guidance, "engine_sha256": pipe.runtime_sha256, "backend": pipe.backend,
+   405→                "dtype": "float16", "vae_dtype": "float32", "fused_projections": False,
+   406→                "model_weights": pipe.weights, "host": "comfyui",
+   407→                "prefix_tokens": len(plan.prefix)})
+   408→            run["settings"] = {"max_tokens": target_max_tokens}
+   409→
+   410→            _release_gpu_cache()
+   411→            _require_gpu_room()
+   412→            print(f"[YuE2] AR preflight: prefix={len(plan.prefix)}, budget={target_max_tokens}, "
+   413→                  f"context={len(plan.prefix) + target_max_tokens}", flush=True)
+   414→            started = time.perf_counter()
+   415→            semantic = pipe.generate_semantic(
+   416→                plan, sampling={"max_tokens": target_max_tokens},
+   417→                cancelled=engine._cancelled, on_token=_semantic_reporter(run, target_max_tokens))
+   418→            STAGE_TIMES["semantic"] = time.perf_counter() - started
+   419→            np.save(directory / "semantic.npy", np.asarray(semantic.tokens, dtype=np.int32), allow_pickle=False)
+   420→            write_json(directory / "semantic.json", {"truncated": semantic.truncated,
+   421→                                                     "timing": semantic.timing,
+   422→                                                     "token_count": len(semantic.tokens)})
+   423→            tps = len(semantic.tokens) / STAGE_TIMES["semantic"] if STAGE_TIMES["semantic"] > 0 else 0.0
+   424→            timing = semantic.timing or {}
+   425→            print(f"[YuE2] Semantic: {len(semantic.tokens)} tokens in {STAGE_TIMES['semantic']:.1f}s "
+   426→                  f"({tps:.1f} tok/s) execution={timing.get('execution')} attention={timing.get('attention')}",
+   427→                  flush=True)
+   428→            run["semantic_truncated"] = semantic.truncated
+   429→            run["plan_truncated"] = plan.truncated
+   430→            return ({"semantic": semantic, "plan": plan, "max_tokens": target_max_tokens},)
+   431→        except InterruptedError:
+   432→            _cancelled_run(directory)
+   433→            raise InterruptProcessingException("Music-token generation was interrupted")
+   434→        except InterruptProcessingException:
+   435→            _cancelled_run(directory)
+   436→            raise
+   437→
+   438→
+   439→class YuE2SynthesizeLatents:
+   440→    """Stage 3: flow-matching synthesis from tokens to 64-channel latents."""
+   441→
+   442→    @classmethod
+   443→    def INPUT_TYPES(cls):
+   444→        return {"required": {
+   445→            "run": ("YUE2_RUN",),
+   446→            "tokens": ("YUE2_TOKENS",),
+   447→            "steps": ("INT", {"default": 16, "min": 2, "max": 64}),
+   448→            "method": (METHODS, {"default": "euler"})}}
+   449→
+   450→    RETURN_TYPES = ("YUE2_LATENTS",)
+   451→    FUNCTION = "execute"
+   452→    CATEGORY = CATEGORY
+   453→    DESCRIPTION = ("Runs the non-autoregressive acoustic solver (default 16 Euler steps, the "
+   454→                   "engine default; midpoint costs twice the evaluations). Latents and their "
+   455→                   "checksum manifest are saved before decoding so a late failure is recoverable.")
+   456→
+   457→    def execute(self, run, tokens, steps, method):
+   458→        directory = run["directory"]
+   459→        from yue2.storage import write_json, sha256_file
+   460→        try:
+   461→            pipe = _pipe()
+   462→            import dataclasses
+   463→            pipe.generation_config = dataclasses.replace(
+   464→                pipe.generation_config, ode_steps=int(steps), ode_method=str(method))
+   465→            _release_gpu_cache()
+   466→            started = time.perf_counter()
+   467→            latents = pipe.synthesize(tokens["semantic"], cancelled=engine._cancelled)
+   468→            STAGE_TIMES["acoustic"] = time.perf_counter() - started
+   469→            np.save(directory / "latent.npy", latents, allow_pickle=False)
+   470→            write_json(directory / "latent_manifest.json", {
+   471→                "sha256": sha256_file(directory / "latent.npy"),
+   472→                "shape": list(latents.shape), "model_weights": pipe.weights})
+   473→            settings_path = directory / "settings.json"
+   474→            if settings_path.is_file():
+   475→                settings = json.loads(settings_path.read_text())
+   476→                settings.update({"ode_steps": int(steps), "ode_method": str(method)})
+   477→                write_json(settings_path, settings)
+   478→            print(f"[YuE2] Acoustic: {latents.shape[0]} latent frames in {STAGE_TIMES['acoustic']:.1f}s", flush=True)
+   479→            return ({"latents": latents},)
+   480→        except InterruptedError:
+   481→            _cancelled_run(directory)
+   482→            raise InterruptProcessingException("Acoustic synthesis was interrupted")
+   483→        except InterruptProcessingException:
+   484→            _cancelled_run(directory)
+   485→            raise
+   486→
+   487→
+   488→class YuE2DecodeAudio:
+   489→    """Stage 4: tiled FP32 VAE decode to 48 kHz stereo on GPU 1."""
+   490→
+   491→    @classmethod
+   492→    def INPUT_TYPES(cls):
+   493→        return {"required": {"run": ("YUE2_RUN",), "latents": ("YUE2_LATENTS",)}}
+   494→
+   495→    RETURN_TYPES = ("AUDIO",)
+   496→    FUNCTION = "execute"
+   497→    CATEGORY = CATEGORY
+   498→    DESCRIPTION = ("Decodes latents with the tiled FP32 YuE2 VAE (512-frame tiles, 16-frame "
+   499→                   "halo) on the second GPU and hands standard ComfyUI AUDIO to preview or save.")
+   500→
+   501→    def execute(self, run, latents):
+   502→        directory = run["directory"]
+   503→        try:
+   504→            pipe = _pipe()
+   505→            _release_gpu_cache()
+   506→            started = time.perf_counter()
+   507→            audio = pipe.decode(latents["latents"])
+   508→            STAGE_TIMES["vae"] = time.perf_counter() - started
+   509→            if audio.ndim != 2 or audio.shape[1] != 2 or not np.isfinite(audio).all():
+   510→                raise ValueError("Expected finite stereo audio")
+   511→            if not np.any(audio):
+   512→                raise ValueError("Decoded audio is entirely silent")
+   513→            print(f"[YuE2] VAE decode: {len(audio)/48000:.1f}s audio in {STAGE_TIMES['vae']:.1f}s", flush=True)
+   514→            waveform = torch.from_numpy(audio).T.contiguous().unsqueeze(0).float()
+   515→            return ({"waveform": waveform, "sample_rate": 48000},)
+   516→        except InterruptedError:
+   517→            _cancelled_run(directory)
+   518→            raise InterruptProcessingException("VAE decoding was interrupted")
+   519→        except InterruptProcessingException:
+   520→            _cancelled_run(directory)
+   521→            raise
+   522→
+   523→
+   524→class YuE2SaveSong:
+   525→    """Checked PCM-24 masters, full status report and the run ZIP."""
+   526→
+   527→    @classmethod
+   528→    def INPUT_TYPES(cls):
+   529→        return {"required": {"run": ("YUE2_RUN",), "tokens": ("YUE2_TOKENS",), "audio": ("AUDIO",)}}
+   530→
+   531→    RETURN_TYPES = ("AUDIO",)
+   532→    OUTPUT_NODE = True
+   533→    FUNCTION = "execute"
+   534→    CATEGORY = CATEGORY
+   535→    DESCRIPTION = ("Writes audio.wav / audio.flac (48 kHz stereo PCM-24) and playback.wav into "
+   536→                   "the run folder, validates headers and token duration, distinguishes a natural "
+   537→                   "ending from a token-limit cutoff, and zips the run for download.")
+   538→
+   539→    def execute(self, run, tokens, audio):
+   540→        directory = run["directory"]
+   541→        from yue2.storage import write_json
+   542→        semantic = tokens["semantic"]
+   543→        try:
+   544→            waveform = audio["waveform"].detach().cpu()
+   545→            rate = int(audio["sample_rate"])
+   546→            if waveform.ndim != 3 or waveform.shape[0] != 1 or waveform.shape[1] != 2:
+   547→                raise ValueError("Expected one stereo waveform [1,2,T]")
+   548→            data = waveform[0].T.contiguous().numpy()
+   549→            audio_duration = len(data) / rate
+   550→            if not np.isclose(audio_duration, len(semantic.tokens) / 25, atol=0.1):
+   551→                raise ValueError("Audio length does not match generated tokens")
+   552→            playback = (np.clip(data, -1.0, 1.0) * 32767.0).astype(np.int16)
+   553→            sf.write(str(directory / "audio.wav"), data, rate, subtype="PCM_24")
+   554→            sf.write(str(directory / "audio.flac"), data, rate, subtype="PCM_24")
+   555→            sf.write(str(directory / "playback.wav"), playback, rate, subtype="PCM_16")
+   556→            for saved in ("audio.wav", "audio.flac"):
+   557→                info = sf.info(str(directory / saved))
+   558→                if info.channels != 2 or info.samplerate != rate or not np.isclose(info.duration, audio_duration, atol=0.001):
+   559→                    raise ValueError(f"Export validation failed: {saved}")
+   560→
+   561→            total_time = sum(STAGE_TIMES.get(k, 0.0) for k in ("planning", "semantic", "acoustic", "vae"))
+   562→            report = {
+   563→                "status": "audio_saved_with_cutoff" if semantic.truncated else "audio_saved_natural_end",
+   564→                "max_seconds": tokens["max_tokens"] / 25, "actual_seconds": audio_duration,
+   565→                "semantic_truncated": semantic.truncated, "abc_truncated": run.get("plan_truncated", False),
+   566→                "ending_reason": "token_limit" if semantic.truncated else "model_end_token",
+   567→                "timing": {k: v for k, v in STAGE_TIMES.items()},
+   568→                "ar_timing": semantic.timing, "attention_dispatch": dict(getattr(engine, "ATTENTION_STATUS", {})),
+   569→                "acoustic_ranges": _acoustic_ranges(),
+   570→                "boundary_seconds": _boundaries(),
+   571→                "notes": run["notes"], "files": ["audio.wav", "audio.flac", "playback.wav"],
+   572→                "host": "comfyui",
+   573→            }
+   574→            write_json(directory / "status.json", report)
+   575→            status_lines = [
+   576→                f"Done: {audio_duration:.1f}s of 48 kHz stereo audio." if semantic.truncated is False
+   577→                else f"Exported with cutoff: {audio_duration:.1f}s (reached the safety ceiling).",
+   578→                f"Ending reason: {report['ending_reason']}.",
+   579→                f"Stage times: " + ", ".join(f"{k}={v:.1f}s" for k, v in STAGE_TIMES.items()),
+   580→                "Saved: " + str(directory),
+   581→            ]
+   582→            if report["boundary_seconds"]:
+   583→                status_lines.append("Listen for seams at these seconds: " + str(report["boundary_seconds"]))
+   584→            for note in run["notes"]:
+   585→                status_lines.insert(0, "Note: " + note)
+   586→            import shutil
+   587→            try:
+   588→                archive_bytes = sum(p.stat().st_size for p in directory.iterdir() if p.is_file())
+   589→                if shutil.disk_usage(directory).free < archive_bytes + 64 * 2**20:
+   590→                    raise OSError("Not enough space for the additional ZIP; original files are saved")
+   591→                shutil.make_archive(str(directory), "zip", root_dir=directory)
+   592→            except OSError as archive_error:
+   593→                status_lines.append(f"ZIP unavailable: {archive_error}")
+   594→            _release_gpu_cache()
+   595→            _STATE["run"] = None  # The next queued song gets a fresh run folder.
+   596→            subfolder = directory.relative_to(folder_paths.get_output_directory()).as_posix()
+   597→            return {"ui": {"audio": [{"filename": "audio.flac", "subfolder": subfolder,
+   598→                                      "type": "output", "format": "audio/flac"}],
+   599→                           "text": ["\n".join(status_lines)]},
+   600→                    "result": ({"waveform": waveform, "sample_rate": rate},)}
+   601→        except InterruptProcessingException:
+   602→            _cancelled_run(directory)
+   603→            raise
+   604→
+   605→
+   606→def _acoustic_ranges():
+   607→    pipe = engine.pipe
+   608→    return list(getattr(pipe, "last_acoustic_ranges", []) or [])
+   609→
+   610→
+   611→def _boundaries():
+   612→    return [b / 25 for _, b in _acoustic_ranges()[:-1]]
+   613→
+   614→
+   615→class YuE2AnalyzeMelody:
+   616→    """Extracts a melody-only ABC score from an uploaded song (SheetSage2, FP32)."""
+   617→
+   618→    @classmethod
+   619→    def INPUT_TYPES(cls):
+   620→        return {"required": {
+   621→            "audio": ("AUDIO",),
+   622→            "transcribe_lyrics": ("BOOLEAN", {"default": False}),
+   623→            "language": ("STRING", {"default": "Auto-detect"})}}
+   624→
+   625→    RETURN_TYPES = ("YUE2_ABC",)
+   626→    OUTPUT_NODE = True
+   627→    FUNCTION = "execute"
+   628→    CATEGORY = CATEGORY
+   629→    DESCRIPTION = ("Runs the T4-compatible FP32 melody transcription on the uploaded song and "
+   630→                   "produces an ABC score plus a cover-analysis ZIP. Wire the score into "
+   631→                   "Generate Song Tokens (Custom ABC) and write the new style. This is symbolic "
+   632→                   "reconstruction, not voice or waveform copying.")
+   633→
+   634→    def execute(self, audio, transcribe_lyrics=False, language="Auto-detect"):
+   635→        waveform = audio["waveform"]
+   636→        rate = int(audio["sample_rate"])
+   637→        if waveform.ndim != 3 or waveform.shape[0] != 1:
+   638→            raise ValueError("Expected one audio channel batch")
+   639→        if engine.pipe is None:
+   640→            _require_gpu_room()
+   641→        else:
+   642→            from native_yue2.process import check_gpu_room
+   643→            check_gpu_room(include_pid=os.getpid())
+   644→        temp = Path(tempfile.mkstemp(suffix=".wav", prefix="yue2_cover_")[1])
+   645→        try:
+   646→            sf.write(str(temp), waveform[0].T.contiguous().numpy(), rate, subtype="FLOAT")
+   647→            abc, lyrics_out, _mode, status, archive = engine.analyze_cover_source(
+   648→                str(temp), language if language else "Auto-detect", "", bool(transcribe_lyrics))
+   649→        except Exception as exc:
+   650→            message = getattr(exc, "message", None) or str(exc)
+   651→            raise RuntimeError(f"Cover melody analysis failed: {message}") from exc
+   652→        finally:
+   653→            temp.unlink(missing_ok=True)
+   654→        print("[YuE2 cover] " + status, flush=True)
+   655→        return {"ui": {"text": [status + f"\nAnalysis ZIP: {archive}"]},
+   656→                "result": (abc,)}
+   657→
+   658→
+   659→class YuE2ReleaseEngine:
+   660→    """Releases the transformer and VAE so the Gradio engine can run instead."""
+   661→
+   662→    @classmethod
+   663→    def INPUT_TYPES(cls):
+   664→        return {"required": {}}
+   665→
+   666→    RETURN_TYPES = ()
+   667→    OUTPUT_NODE = True
+   668→    FUNCTION = "execute"
+   669→    CATEGORY = CATEGORY
+   670→    DESCRIPTION = ("Unloads YuE2 weights from this ComfyUI server and releases the engine lock. "
+   671→                   "The notebook's Gradio cell calls the /yue2/release route automatically; this "
+   672→                   "node does the same from the canvas.")
+   673→
+   674→    def execute(self):
+   675→        release_engine()
+   676→        return {"ui": {"text": ["YuE2 engine released from the ComfyUI server."]}, "result": ()}
+   677→
+   678→
+   679→def release_engine():
+   680→    if engine.pipe is not None:
+   681→        try:
+   682→            engine.pipe.close()
+   683→        except Exception as error:  # Release must never leave the server broken.
+   684→            print(f"[YuE2] Engine close reported: {error}", flush=True)
+   685→        engine.pipe = None
+   686→    _release_gpu_cache()
+   687→    if _STATE["lock"] is not None:
+   688→        try:
+   689→            _STATE["lock"].close()
+   690→        except OSError:
+   691→            pass
+   692→        _STATE["lock"] = None
+   693→    gc.collect()
+   694→
+   695→
+   696→NODE_CLASS_MAPPINGS = {cls.__name__: cls for cls in (
+   697→    YuE2RunContext, YuE2LoadEngine, YuE2StyleLyrics, YuE2PlanScore, YuE2CustomABC,
+   698→    YuE2SongTokens, YuE2SynthesizeLatents, YuE2DecodeAudio, YuE2SaveSong,
+   699→    YuE2AnalyzeMelody, YuE2ReleaseEngine)}
+   700→
+   701→NODE_DISPLAY_NAME_MAPPINGS = {
+   702→    "YuE2RunContext": "YuE2 Run Context (folder + seed)",
+   703→    "YuE2LoadEngine": "Load YuE2 Engine (FP16, exclusive)",
+   704→    "YuE2StyleLyrics": "YuE2 Style and Lyrics",
+   705→    "YuE2PlanScore": "YuE2 Plan Score (optional ABC)",
+   706→    "YuE2CustomABC": "YuE2 Custom ABC Score",
+   707→    "YuE2SongTokens": "YuE2 Generate Song Tokens",
+   708→    "YuE2SynthesizeLatents": "YuE2 Acoustic Synthesis",
+   709→    "YuE2DecodeAudio": "YuE2 VAE Decode (48 kHz stereo)",
+   710→    "YuE2SaveSong": "YuE2 Save Song (masters + status + ZIP)",
+   711→    "YuE2AnalyzeMelody": "YuE2 Cover: Analyze Melody",
+   712→    "YuE2ReleaseEngine": "YuE2 Release Engine Memory",
+   713→}
+   714→
+   715→WEB_DIRECTORY = "./web"
+   716→
+   717→# --- server routes: read-only status + explicit release -----------------------
+   718→from aiohttp import web
+   719→from server import PromptServer
+   720→
+   721→if getattr(PromptServer, "instance", None) is not None:
+   722→    @PromptServer.instance.routes.get("/yue2/status")
+   723→    async def yue2_status(request):
+   724→        payload = {
+   725→            "engine_loaded": engine.pipe is not None,
+   726→            "run": _STATE["run"]["directory"].name if _STATE["run"] else None,
+   727→            "stage_times": dict(STAGE_TIMES),
+   728→            "attention": dict(getattr(engine, "ATTENTION_STATUS", {})),
+   729→            "ar": dict(getattr(engine, "AR_DIAGNOSTICS", {})),
+   730→            "output_root": str(OUTPUT_ROOT),
+   731→        }
+   732→        return web.json_response(payload, headers={"Cache-Control": "no-store"})
+   733→
+   734→    @PromptServer.instance.routes.post("/yue2/release")
+   735→    async def yue2_release(request):
+   736→        release_engine()
+   737→        return web.json_response({"released": True}, headers={"Cache-Control": "no-store"})
+   738→

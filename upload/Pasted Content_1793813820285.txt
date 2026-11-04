@@ -1,0 +1,502 @@
+Using saved Kaggle assets: /kaggle/input/datasets/janpierrrewiet/yue2-music-assets; model/package downloads disabled.
+runtime: /kaggle/temp/yue2_native; 966.9 GiB free
+outputs: /kaggle/working/yue2_native/runs; 19.5 GiB free
+Saved input models stay read-only; the session overlay is temporary. Song outputs must be saved.
+GPU memory/process preflight: {
+  "caller_pid": 50,
+  "devices": [
+    {
+      "index": 0,
+      "uuid": "GPU-91fb09b4-934c-c9f3-6536-db5d45c6ce7e",
+      "total_mib": 15360,
+      "free_mib": 14912
+    },
+    {
+      "index": 1,
+      "uuid": "GPU-3781da5d-440c-e792-2ae6-a109d9987d8d",
+      "total_mib": 15360,
+      "free_mib": 14912
+    }
+  ],
+  "applications": []
+}
+Processing /kaggle/temp/yue2_native/bootstrap/pip-25.3-py3-none-any.whl
+Installing collected packages: pip
+Successfully installed pip-25.3
+Environment ready: Python 3.13.16, local pip 25.3 (ensurepip not used).
+Looking in links: /kaggle/input/datasets/janpierrrewiet/yue2-music-assets/wheelhouse, /kaggle/input/datasets/janpierrrewiet/yue2-music-assets/wheelhouse
+Processing /kaggle/input/datasets/janpierrrewiet/yue2-music-assets/wheelhouse/transformers-4.57.6-py3-none-any.whl
+Processing /kaggle/input/datasets/janpierrrewiet/yue2-music-assets/wheelhouse/huggingface_hub-0.36.2-py3-none-any.whl
+Processing /kaggle/input/datasets/janpierrrewiet/yue2-music-assets/wheelhouse/gradio-5.49.1-py3-none-any.whl
+Processing /kaggle/input/datasets/janpierrrewiet/yue2-music-assets/wheelhouse/pillow-11.3.0-cp313-cp313-manylinux_2_27_x86_64.manylinux_2_28_x86_64.whl
+Processing /kaggle/input/datasets/janpierrrewiet/yue2-music-assets/wheelhouse/soundfile-0.13.1-py2.py3-none-manylinux_2_28_x86_64.whl
+Processing /kaggle/input/datasets/janpierrrewiet/yue2-music-assets/wheelhouse/accelerate-1.13.0-py3-none-any.whl
+Processing /kaggle/input/datasets/janpierrrewiet/yue2-music-assets/wheelhouse/tiktoken-0.12.0-cp313-cp313-manylinux_2_28_x86_64.whl
+Requirement already satisfied: safetensors>=0.7.0 in /usr/local/lib/python3.13/dist-packages (0.8.0)
+Processing /kaggle/input/datasets/janpierrrewiet/yue2-music-assets/wheelhouse/mir_eval-0.8.2-py3-none-any.whl
+Processing /kaggle/input/datasets/janpierrrewiet/yue2-music-assets/wheelhouse/pretty_midi-0.2.10-py3-none-any.whl
+Processing /kaggle/input/datasets/janpierrrewiet/yue2-music-assets/wheelhouse/mido-1.3.3-py3-none-any.whl
+Processing /kaggle/input/datasets/janpierrrewiet/yue2-music-assets/wheelhouse/aiofiles-24.1.0-py3-none-any.whl (from -r /kaggle/input/datasets/janpierrrewiet/yue2-music-assets/overlay-requirements.txt (line 2))
+Processing /kaggle/input/datasets/janpierrrewiet/yue2-music-assets/wheelhouse/ffmpy-1.0.0-py3-none-any.whl (from -r /kaggle/input/datasets/janpierrrewiet/yue2-music-assets/overlay-requirements.txt (line 3))
+Processing /kaggle/input/datasets/janpierrrewiet/yue2-music-assets/wheelhouse/gradio_client-1.13.3-py3-none-any.whl (from -r /kaggle/input/datasets/janpierrrewiet/yue2-music-assets/overlay-requirements.txt (line 5))
+Processing /kaggle/input/datasets/janpierrrewiet/yue2-music-assets/wheelhouse/pydantic-2.11.10-py3-none-any.whl (from -r /kaggle/input/datasets/janpierrrewiet/yue2-music-assets/overlay-requirements.txt (line 11))
+Processing /kaggle/input/datasets/janpierrrewiet/yue2-music-assets/wheelhouse/pydantic_core-2.33.2-cp313-cp313-manylinux_2_17_x86_64.manylinux2014_x86_64.whl (from -r /kaggle/input/datasets/janpierrrewiet/yue2-music-assets/overlay-requirements.txt (line 12))
+Processing /kaggle/input/datasets/janpierrrewiet/yue2-music-assets/wheelhouse/ruff-0.17.3-py3-none-manylinux_2_17_x86_64.manylinux2014_x86_64.whl (from -r /kaggle/input/datasets/janpierrrewiet/yue2-music-assets/overlay-requirements.txt (line 13))
+Processing /kaggle/input/datasets/janpierrrewiet/yue2-music-assets/wheelhouse/starlette-0.52.1-py3-none-any.whl (from -r /kaggle/input/datasets/janpierrrewiet/yue2-music-assets/overlay-requirements.txt (line 15))
+Processing /kaggle/input/datasets/janpierrrewiet/yue2-music-assets/wheelhouse/tokenizers-0.22.2-cp39-abi3-manylinux_2_17_x86_64.manylinux2014_x86_64.whl (from -r /kaggle/input/datasets/janpierrrewiet/yue2-music-assets/overlay-requirements.txt (line 17))
+Processing /kaggle/input/datasets/janpierrrewiet/yue2-music-assets/wheelhouse/tomlkit-0.13.3-py3-none-any.whl (from -r /kaggle/input/datasets/janpierrrewiet/yue2-music-assets/overlay-requirements.txt (line 18))
+Requirement already satisfied: filelock in /usr/local/lib/python3.13/dist-packages (from transformers==4.57.6) (4.2.4)
+Requirement already satisfied: numpy>=1.17 in /usr/local/lib/python3.13/dist-packages (from transformers==4.57.6) (2.1.3)
+Requirement already satisfied: packaging>=20.0 in /usr/local/lib/python3.13/dist-packages (from transformers==4.57.6) (26.3)
+Requirement already satisfied: pyyaml>=5.1 in /usr/local/lib/python3.13/dist-packages (from transformers==4.57.6) (6.0.3)
+Requirement already satisfied: regex!=2019.12.17 in /usr/local/lib/python3.13/dist-packages (from transformers==4.57.6) (2025.11.3)
+Requirement already satisfied: requests in /usr/local/lib/python3.13/dist-packages (from transformers==4.57.6) (2.34.2)
+Requirement already satisfied: tqdm>=4.27 in /usr/local/lib/python3.13/dist-packages (from transformers==4.57.6) (4.67.3)
+Requirement already satisfied: fsspec>=2023.5.0 in /usr/local/lib/python3.13/dist-packages (from huggingface-hub==0.36.2) (2025.12.0)
+Requirement already satisfied: hf-xet<2.0.0,>=1.1.3 in /usr/local/lib/python3.13/dist-packages (from huggingface-hub==0.36.2) (1.7.0)
+Requirement already satisfied: typing-extensions>=3.7.4.3 in /usr/local/lib/python3.13/dist-packages (from huggingface-hub==0.36.2) (4.16.0)
+Requirement already satisfied: anyio<5.0,>=3.0 in /usr/local/lib/python3.13/dist-packages (from gradio==5.49.1) (4.15.1)
+Requirement already satisfied: audioop-lts<1.0 in /usr/local/lib/python3.13/dist-packages (from gradio==5.49.1) (0.2.2)
+Requirement already satisfied: brotli>=1.1.0 in /usr/local/lib/python3.13/dist-packages (from gradio==5.49.1) (1.2.1)
+Requirement already satisfied: fastapi<1.0,>=0.115.2 in /usr/local/lib/python3.13/dist-packages (from gradio==5.49.1) (0.141.1)
+Requirement already satisfied: groovy~=0.1 in /usr/local/lib/python3.13/dist-packages (from gradio==5.49.1) (0.1.2)
+Requirement already satisfied: httpx<1.0,>=0.24.1 in /usr/local/lib/python3.13/dist-packages (from gradio==5.49.1) (0.28.1)
+Requirement already satisfied: jinja2<4.0 in /usr/local/lib/python3.13/dist-packages (from gradio==5.49.1) (3.1.6)
+Requirement already satisfied: markupsafe<4.0,>=2.0 in /usr/local/lib/python3.13/dist-packages (from gradio==5.49.1) (3.0.4)
+Requirement already satisfied: orjson~=3.0 in /usr/local/lib/python3.13/dist-packages (from gradio==5.49.1) (3.13.0)
+Requirement already satisfied: pandas<3.0,>=1.0 in /usr/local/lib/python3.13/dist-packages (from gradio==5.49.1) (2.3.3)
+Requirement already satisfied: pydub in /usr/local/lib/python3.13/dist-packages (from gradio==5.49.1) (0.25.1)
+Requirement already satisfied: python-multipart>=0.0.18 in /usr/local/lib/python3.13/dist-packages (from gradio==5.49.1) (0.0.32)
+Requirement already satisfied: safehttpx<0.2.0,>=0.1.6 in /usr/local/lib/python3.13/dist-packages (from gradio==5.49.1) (0.1.7)
+Requirement already satisfied: semantic-version~=2.0 in /usr/local/lib/python3.13/dist-packages (from gradio==5.49.1) (2.10.0)
+Requirement already satisfied: typer<1.0,>=0.12 in /usr/local/lib/python3.13/dist-packages (from gradio==5.49.1) (0.27.3)
+Requirement already satisfied: uvicorn>=0.14.0 in /usr/local/lib/python3.13/dist-packages (from gradio==5.49.1) (0.54.0)
+Requirement already satisfied: annotated-types>=0.6.0 in /usr/local/lib/python3.13/dist-packages (from pydantic==2.11.10->-r /kaggle/input/datasets/janpierrrewiet/yue2-music-assets/overlay-requirements.txt (line 11)) (0.8.0)
+Requirement already satisfied: typing-inspection>=0.4.0 in /usr/local/lib/python3.13/dist-packages (from pydantic==2.11.10->-r /kaggle/input/datasets/janpierrrewiet/yue2-music-assets/overlay-requirements.txt (line 11)) (0.4.4)
+Requirement already satisfied: cffi>=1.0 in /usr/local/lib/python3.13/dist-packages (from soundfile==0.13.1) (2.1.1)
+Requirement already satisfied: psutil in /usr/local/lib/python3.13/dist-packages (from accelerate==1.13.0) (5.9.5)
+Requirement already satisfied: torch>=2.0.0 in /usr/local/lib/python3.13/dist-packages (from accelerate==1.13.0) (2.11.0+cu130)
+Requirement already satisfied: scipy>=1.4.0 in /usr/local/lib/python3.13/dist-packages (from mir_eval==0.8.2) (1.16.3)
+Requirement already satisfied: decorator in /usr/local/lib/python3.13/dist-packages (from mir_eval==0.8.2) (5.3.1)
+Requirement already satisfied: six in /usr/local/lib/python3.13/dist-packages (from pretty_midi==0.2.10) (1.17.0)
+Requirement already satisfied: websockets<16.0,>=13.0 in /usr/local/lib/python3.13/dist-packages (from gradio_client==1.13.3->-r /kaggle/input/datasets/janpierrrewiet/yue2-music-assets/overlay-requirements.txt (line 5)) (15.0.1)
+Requirement already satisfied: idna>=2.8 in /usr/local/lib/python3.13/dist-packages (from anyio<5.0,>=3.0->gradio==5.49.1) (3.20)
+Requirement already satisfied: annotated-doc>=0.0.2 in /usr/local/lib/python3.13/dist-packages (from fastapi<1.0,>=0.115.2->gradio==5.49.1) (0.0.5)
+Requirement already satisfied: certifi in /usr/local/lib/python3.13/dist-packages (from httpx<1.0,>=0.24.1->gradio==5.49.1) (2026.10.23)
+Requirement already satisfied: httpcore==1.* in /usr/local/lib/python3.13/dist-packages (from httpx<1.0,>=0.24.1->gradio==5.49.1) (1.0.9)
+Requirement already satisfied: h11>=0.16 in /usr/local/lib/python3.13/dist-packages (from httpcore==1.*->httpx<1.0,>=0.24.1->gradio==5.49.1) (0.16.0)
+Requirement already satisfied: python-dateutil>=2.8.2 in /usr/local/lib/python3.13/dist-packages (from pandas<3.0,>=1.0->gradio==5.49.1) (2.9.0.post0)
+Requirement already satisfied: pytz>=2020.1 in /usr/local/lib/python3.13/dist-packages (from pandas<3.0,>=1.0->gradio==5.49.1) (2025.2)
+Requirement already satisfied: tzdata>=2022.7 in /usr/local/lib/python3.13/dist-packages (from pandas<3.0,>=1.0->gradio==5.49.1) (2026.5)
+Requirement already satisfied: shellingham>=1.3.0 in /usr/local/lib/python3.13/dist-packages (from typer<1.0,>=0.12->gradio==5.49.1) (1.5.4)
+Requirement already satisfied: rich>=13.8.0 in /usr/local/lib/python3.13/dist-packages (from typer<1.0,>=0.12->gradio==5.49.1) (13.9.4)
+Requirement already satisfied: pycparser in /usr/local/lib/python3.13/dist-packages (from cffi>=1.0->soundfile==0.13.1) (3.12)
+Requirement already satisfied: charset_normalizer<4,>=2 in /usr/local/lib/python3.13/dist-packages (from requests->transformers==4.57.6) (3.4.9)
+Requirement already satisfied: urllib3<3,>=1.26 in /usr/local/lib/python3.13/dist-packages (from requests->transformers==4.57.6) (2.8.0)
+Requirement already satisfied: markdown-it-py>=2.2.0 in /usr/local/lib/python3.13/dist-packages (from rich>=13.8.0->typer<1.0,>=0.12->gradio==5.49.1) (4.2.0)
+Requirement already satisfied: pygments<3.0.0,>=2.13.0 in /usr/local/lib/python3.13/dist-packages (from rich>=13.8.0->typer<1.0,>=0.12->gradio==5.49.1) (2.21.0)
+Requirement already satisfied: mdurl~=0.1 in /usr/local/lib/python3.13/dist-packages (from markdown-it-py>=2.2.0->rich>=13.8.0->typer<1.0,>=0.12->gradio==5.49.1) (0.1.2)
+Requirement already satisfied: setuptools<82 in /usr/local/lib/python3.13/dist-packages (from torch>=2.0.0->accelerate==1.13.0) (81.0.0)
+Requirement already satisfied: sympy>=1.13.3 in /usr/local/lib/python3.13/dist-packages (from torch>=2.0.0->accelerate==1.13.0) (1.14.0)
+Requirement already satisfied: networkx>=2.5.1 in /usr/local/lib/python3.13/dist-packages (from torch>=2.0.0->accelerate==1.13.0) (3.7)
+Requirement already satisfied: cuda-toolkit==13.0.2 in /usr/local/lib/python3.13/dist-packages (from cuda-toolkit[cublas,cudart,cufft,cufile,cupti,curand,cusolver,cusparse,nvjitlink,nvrtc,nvtx]==13.0.2; platform_system == "Linux"->torch>=2.0.0->accelerate==1.13.0) (13.0.2)
+Requirement already satisfied: cuda-bindings<14,>=13.0.3 in /usr/local/lib/python3.13/dist-packages (from torch>=2.0.0->accelerate==1.13.0) (13.0.3)
+Requirement already satisfied: nvidia-cudnn-cu13==9.19.0.56 in /usr/local/lib/python3.13/dist-packages (from torch>=2.0.0->accelerate==1.13.0) (9.19.0.56)
+Requirement already satisfied: nvidia-cusparselt-cu13==0.8.0 in /usr/local/lib/python3.13/dist-packages (from torch>=2.0.0->accelerate==1.13.0) (0.8.0)
+Requirement already satisfied: nvidia-nccl-cu13==2.28.9 in /usr/local/lib/python3.13/dist-packages (from torch>=2.0.0->accelerate==1.13.0) (2.28.9)
+Requirement already satisfied: nvidia-nvshmem-cu13==3.4.5 in /usr/local/lib/python3.13/dist-packages (from torch>=2.0.0->accelerate==1.13.0) (3.4.5)
+Requirement already satisfied: triton==3.6.0 in /usr/local/lib/python3.13/dist-packages (from torch>=2.0.0->accelerate==1.13.0) (3.6.0)
+Requirement already satisfied: nvidia-cublas==13.1.0.3.* in /usr/local/lib/python3.13/dist-packages (from cuda-toolkit[cublas,cudart,cufft,cufile,cupti,curand,cusolver,cusparse,nvjitlink,nvrtc,nvtx]==13.0.2; platform_system == "Linux"->torch>=2.0.0->accelerate==1.13.0) (13.1.0.3)
+Requirement already satisfied: nvidia-cuda-runtime==13.0.96.* in /usr/local/lib/python3.13/dist-packages (from cuda-toolkit[cublas,cudart,cufft,cufile,cupti,curand,cusolver,cusparse,nvjitlink,nvrtc,nvtx]==13.0.2; platform_system == "Linux"->torch>=2.0.0->accelerate==1.13.0) (13.0.96)
+Requirement already satisfied: nvidia-cufft==12.0.0.61.* in /usr/local/lib/python3.13/dist-packages (from cuda-toolkit[cublas,cudart,cufft,cufile,cupti,curand,cusolver,cusparse,nvjitlink,nvrtc,nvtx]==13.0.2; platform_system == "Linux"->torch>=2.0.0->accelerate==1.13.0) (12.0.0.61)
+Requirement already satisfied: nvidia-cufile==1.15.1.6.* in /usr/local/lib/python3.13/dist-packages (from cuda-toolkit[cublas,cudart,cufft,cufile,cupti,curand,cusolver,cusparse,nvjitlink,nvrtc,nvtx]==13.0.2; platform_system == "Linux"->torch>=2.0.0->accelerate==1.13.0) (1.15.1.6)
+Requirement already satisfied: nvidia-cuda-cupti==13.0.85.* in /usr/local/lib/python3.13/dist-packages (from cuda-toolkit[cublas,cudart,cufft,cufile,cupti,curand,cusolver,cusparse,nvjitlink,nvrtc,nvtx]==13.0.2; platform_system == "Linux"->torch>=2.0.0->accelerate==1.13.0) (13.0.85)
+Requirement already satisfied: nvidia-curand==10.4.0.35.* in /usr/local/lib/python3.13/dist-packages (from cuda-toolkit[cublas,cudart,cufft,cufile,cupti,curand,cusolver,cusparse,nvjitlink,nvrtc,nvtx]==13.0.2; platform_system == "Linux"->torch>=2.0.0->accelerate==1.13.0) (10.4.0.35)
+Requirement already satisfied: nvidia-cusolver==12.0.4.66.* in /usr/local/lib/python3.13/dist-packages (from cuda-toolkit[cublas,cudart,cufft,cufile,cupti,curand,cusolver,cusparse,nvjitlink,nvrtc,nvtx]==13.0.2; platform_system == "Linux"->torch>=2.0.0->accelerate==1.13.0) (12.0.4.66)
+Requirement already satisfied: nvidia-cusparse==12.6.3.3.* in /usr/local/lib/python3.13/dist-packages (from cuda-toolkit[cublas,cudart,cufft,cufile,cupti,curand,cusolver,cusparse,nvjitlink,nvrtc,nvtx]==13.0.2; platform_system == "Linux"->torch>=2.0.0->accelerate==1.13.0) (12.6.3.3)
+Requirement already satisfied: nvidia-nvjitlink==13.0.88.* in /usr/local/lib/python3.13/dist-packages (from cuda-toolkit[cublas,cudart,cufft,cufile,cupti,curand,cusolver,cusparse,nvjitlink,nvrtc,nvtx]==13.0.2; platform_system == "Linux"->torch>=2.0.0->accelerate==1.13.0) (13.0.88)
+Requirement already satisfied: nvidia-cuda-nvrtc==13.0.88.* in /usr/local/lib/python3.13/dist-packages (from cuda-toolkit[cublas,cudart,cufft,cufile,cupti,curand,cusolver,cusparse,nvjitlink,nvrtc,nvtx]==13.0.2; platform_system == "Linux"->torch>=2.0.0->accelerate==1.13.0) (13.0.88)
+Requirement already satisfied: nvidia-nvtx==13.0.85.* in /usr/local/lib/python3.13/dist-packages (from cuda-toolkit[cublas,cudart,cufft,cufile,cupti,curand,cusolver,cusparse,nvjitlink,nvrtc,nvtx]==13.0.2; platform_system == "Linux"->torch>=2.0.0->accelerate==1.13.0) (13.0.85)
+Requirement already satisfied: cuda-pathfinder~=1.1 in /usr/local/lib/python3.13/dist-packages (from cuda-bindings<14,>=13.0.3->torch>=2.0.0->accelerate==1.13.0) (1.8.4)
+Requirement already satisfied: mpmath<1.4,>=1.1.0 in /usr/local/lib/python3.13/dist-packages (from sympy>=1.13.3->torch>=2.0.0->accelerate==1.13.0) (1.3.0)
+Requirement already satisfied: click>=7.0 in /usr/local/lib/python3.13/dist-packages (from uvicorn>=0.14.0->gradio==5.49.1) (8.5.0)
+Installing collected packages: tomlkit, ruff, pydantic_core, pillow, mido, ffmpy, aiofiles, tiktoken, starlette, soundfile, pydantic, pretty_midi, mir_eval, huggingface-hub, tokenizers, gradio_client, transformers, gradio, accelerate
+  Attempting uninstall: tomlkit
+    Found existing installation: tomlkit 0.14.0
+    Not uninstalling tomlkit at /usr/local/lib/python3.13/dist-packages, outside environment /kaggle/temp/yue2_native/venv
+    Can't uninstall 'tomlkit'. No files were found to uninstall.
+  Attempting uninstall: pydantic_core
+    Found existing installation: pydantic_core 2.50.1
+    Not uninstalling pydantic-core at /usr/local/lib/python3.13/dist-packages, outside environment /kaggle/temp/yue2_native/venv
+    Can't uninstall 'pydantic_core'. No files were found to uninstall.
+  Attempting uninstall: pillow
+    Found existing installation: pillow 13.0.0
+    Not uninstalling pillow at /usr/local/lib/python3.13/dist-packages, outside environment /kaggle/temp/yue2_native/venv
+    Can't uninstall 'pillow'. No files were found to uninstall.
+  Attempting uninstall: aiofiles
+    Found existing installation: aiofiles 25.1.0
+    Not uninstalling aiofiles at /usr/local/lib/python3.13/dist-packages, outside environment /kaggle/temp/yue2_native/venv
+    Can't uninstall 'aiofiles'. No files were found to uninstall.
+  Attempting uninstall: tiktoken
+    Found existing installation: tiktoken 0.14.0
+    Not uninstalling tiktoken at /usr/local/lib/python3.13/dist-packages, outside environment /kaggle/temp/yue2_native/venv
+    Can't uninstall 'tiktoken'. No files were found to uninstall.
+  Attempting uninstall: starlette
+    Found existing installation: starlette 1.9.0
+    Not uninstalling starlette at /usr/local/lib/python3.13/dist-packages, outside environment /kaggle/temp/yue2_native/venv
+    Can't uninstall 'starlette'. No files were found to uninstall.
+  Attempting uninstall: soundfile
+    Found existing installation: soundfile 0.14.0
+    Not uninstalling soundfile at /usr/local/lib/python3.13/dist-packages, outside environment /kaggle/temp/yue2_native/venv
+    Can't uninstall 'soundfile'. No files were found to uninstall.
+  Attempting uninstall: pydantic
+    Found existing installation: pydantic 2.14.1
+    Not uninstalling pydantic at /usr/local/lib/python3.13/dist-packages, outside environment /kaggle/temp/yue2_native/venv
+    Can't uninstall 'pydantic'. No files were found to uninstall.
+  Attempting uninstall: huggingface-hub
+    Found existing installation: huggingface_hub 1.33.0
+    Not uninstalling huggingface-hub at /usr/local/lib/python3.13/dist-packages, outside environment /kaggle/temp/yue2_native/venv
+    Can't uninstall 'huggingface_hub'. No files were found to uninstall.
+  Attempting uninstall: tokenizers
+    Found existing installation: tokenizers 0.23.3
+    Not uninstalling tokenizers at /usr/local/lib/python3.13/dist-packages, outside environment /kaggle/temp/yue2_native/venv
+    Can't uninstall 'tokenizers'. No files were found to uninstall.
+  Attempting uninstall: gradio_client
+    Found existing installation: gradio_client 2.7.2
+    Not uninstalling gradio-client at /usr/local/lib/python3.13/dist-packages, outside environment /kaggle/temp/yue2_native/venv
+    Can't uninstall 'gradio_client'. No files were found to uninstall.
+  Attempting uninstall: transformers
+    Found existing installation: transformers 5.20.2
+    Not uninstalling transformers at /usr/local/lib/python3.13/dist-packages, outside environment /kaggle/temp/yue2_native/venv
+    Can't uninstall 'transformers'. No files were found to uninstall.
+  Attempting uninstall: gradio
+    Found existing installation: gradio 6.30.0
+    Not uninstalling gradio at /usr/local/lib/python3.13/dist-packages, outside environment /kaggle/temp/yue2_native/venv
+    Can't uninstall 'gradio'. No files were found to uninstall.
+  Attempting uninstall: accelerate
+    Found existing installation: accelerate 1.15.0
+    Not uninstalling accelerate at /usr/local/lib/python3.13/dist-packages, outside environment /kaggle/temp/yue2_native/venv
+    Can't uninstall 'accelerate'. No files were found to uninstall.
+
+Successfully installed accelerate-1.13.0 aiofiles-24.1.0 ffmpy-1.0.0 gradio-5.49.1 gradio_client-1.13.3 huggingface-hub-0.36.2 mido-1.3.3 mir_eval-0.8.2 pillow-11.3.0 pretty_midi-0.2.10 pydantic-2.11.10 pydantic_core-2.33.2 ruff-0.17.3 soundfile-0.13.1 starlette-0.52.1 tiktoken-0.12.0 tokenizers-0.22.2 tomlkit-0.13.3 transformers-4.57.6
+ERROR: pip's dependency resolver does not currently take into account all the packages that are installed. This behaviour is the source of the following dependency conflicts.
+bigframes 2.51.0 requires google-cloud-bigquery-storage<3.0.0,>=2.30.0, which is not installed.
+sigstore-models 0.0.6 requires pydantic>=2.12, but you have pydantic 2.11.10 which is incompatible.
+dopamine-rl 4.1.2 requires gym<=0.25.2, but you have gym 0.26.2 which is incompatible.
+hf-gradio 0.4.1 requires gradio-client<3.0,>=2.0, but you have gradio-client 1.13.3 which is incompatible.
+google-genai 2.12.1 requires pydantic<3.0.0,>=2.12.5, but you have pydantic 2.11.10 which is incompatible.
+python-fasthtml 0.14.14 requires starlette>=1.0.1, but you have starlette 0.52.1 which is incompatible.
+diffusers 0.42.0 requires huggingface-hub<3.0,>=1.32.0, but you have huggingface-hub 0.36.2 which is incompatible.
+google-adk 2.7.1 requires pydantic<3,>=2.12, but you have pydantic 2.11.10 which is incompatible.
+google-adk 2.7.1 requires starlette<2,>=1.3.1, but you have starlette 0.52.1 which is incompatible.
+Looking in links: /kaggle/input/datasets/janpierrrewiet/yue2-music-assets/wheelhouse
+Processing /kaggle/temp/yue2_native/yue2_infer-0.1.5-py3-none-any.whl
+Installing collected packages: yue2-infer
+Successfully installed yue2-infer-0.1.5
+{"torch": "2.11.0+cu130", "transformers": "4.57.6", "gradio": "5.49.1", "hub": "0.36.2", "gpus": ["Tesla T4", "Tesla T4"]}
+
+Ready. Setup starts no song or diagnostic. Open the UI, select your duration, and generate your song.
+Initialized empty Git repository in /kaggle/temp/yue2_native/ComfyUI/.git/
+hint: Using 'master' as the name for the initial branch. This default branch name
+hint: is subject to change. To configure the initial branch name to use in all
+hint: of your new repositories, which will suppress this warning, call:
+hint: 
+hint: 	git config --global init.defaultBranch <name>
+hint: 
+hint: Names commonly chosen instead of 'master' are 'main', 'trunk' and
+hint: 'development'. The just-created branch can be renamed via this command:
+hint: 
+hint: 	git branch -m <name>
+From https://github.com/comfyanonymous/ComfyUI
+ * branch            423cbd20511becb1f16122ab518e92e58bfa03d9 -> FETCH_HEAD
+HEAD is now at 423cbd2 ComfyUI v0.43.2
+Looking in links: /kaggle/input/datasets/janpierrrewiet/yue2-music-assets/wheelhouse, /kaggle/input/datasets/janpierrrewiet/yue2-music-assets/wheelhouse
+The saved wheelhouse lacks the pinned ComfyUI packages; fetching only the missing wheels from PyPI (saved wheels still come first)...
+ERROR: Could not find a version that satisfies the requirement comfyui-frontend-package==1.57.4 (from versions: none)
+ERROR: No matching distribution found for comfyui-frontend-package==1.57.4
+Looking in links: /kaggle/input/datasets/janpierrrewiet/yue2-music-assets/wheelhouse
+Collecting comfyui-frontend-package==1.57.4 (from -r /kaggle/temp/yue2_native/ComfyUI/requirements.txt (line 1))
+  Downloading comfyui_frontend_package-1.57.4-py3-none-any.whl.metadata (117 bytes)
+Collecting comfyui-workflow-templates==0.11.100 (from -r /kaggle/temp/yue2_native/ComfyUI/requirements.txt (line 2))
+  Downloading comfyui_workflow_templates-0.11.100-py3-none-any.whl.metadata (24 kB)
+Collecting comfyui-embedded-docs==0.5.15 (from -r /kaggle/temp/yue2_native/ComfyUI/requirements.txt (line 3))
+  Downloading comfyui_embedded_docs-0.5.15-py3-none-any.whl.metadata (5.3 kB)
+Requirement already satisfied: torch in /usr/local/lib/python3.13/dist-packages (from -r /kaggle/temp/yue2_native/ComfyUI/requirements.txt (line 4)) (2.11.0+cu130)
+Collecting torchsde (from -r /kaggle/temp/yue2_native/ComfyUI/requirements.txt (line 5))
+  Downloading torchsde-0.2.6-py3-none-any.whl.metadata (5.3 kB)
+Requirement already satisfied: torchvision in /usr/local/lib/python3.13/dist-packages (from -r /kaggle/temp/yue2_native/ComfyUI/requirements.txt (line 6)) (0.26.0+cu130)
+Requirement already satisfied: numpy>=1.25.0 in /usr/local/lib/python3.13/dist-packages (from -r /kaggle/temp/yue2_native/ComfyUI/requirements.txt (line 7)) (2.1.3)
+Requirement already satisfied: einops in /usr/local/lib/python3.13/dist-packages (from -r /kaggle/temp/yue2_native/ComfyUI/requirements.txt (line 8)) (0.8.2)
+Requirement already satisfied: transformers>=4.50.3 in /kaggle/temp/yue2_native/venv/lib/python3.13/site-packages (from -r /kaggle/temp/yue2_native/ComfyUI/requirements.txt (line 9)) (4.57.6)
+Requirement already satisfied: tokenizers>=0.13.3 in /kaggle/temp/yue2_native/venv/lib/python3.13/site-packages (from -r /kaggle/temp/yue2_native/ComfyUI/requirements.txt (line 10)) (0.22.2)
+Requirement already satisfied: sentencepiece in /usr/local/lib/python3.13/dist-packages (from -r /kaggle/temp/yue2_native/ComfyUI/requirements.txt (line 11)) (0.2.2)
+Requirement already satisfied: safetensors>=0.4.2 in /usr/local/lib/python3.13/dist-packages (from -r /kaggle/temp/yue2_native/ComfyUI/requirements.txt (line 12)) (0.8.0)
+Requirement already satisfied: aiohttp>=3.11.8 in /usr/local/lib/python3.13/dist-packages (from -r /kaggle/temp/yue2_native/ComfyUI/requirements.txt (line 13)) (3.14.5)
+Requirement already satisfied: yarl>=1.18.0 in /usr/local/lib/python3.13/dist-packages (from -r /kaggle/temp/yue2_native/ComfyUI/requirements.txt (line 14)) (1.25.1)
+Requirement already satisfied: pyyaml in /usr/local/lib/python3.13/dist-packages (from -r /kaggle/temp/yue2_native/ComfyUI/requirements.txt (line 15)) (6.0.3)
+Requirement already satisfied: Pillow>=10.1.0 in /kaggle/temp/yue2_native/venv/lib/python3.13/site-packages (from -r /kaggle/temp/yue2_native/ComfyUI/requirements.txt (line 16)) (11.3.0)
+Requirement already satisfied: scipy in /usr/local/lib/python3.13/dist-packages (from -r /kaggle/temp/yue2_native/ComfyUI/requirements.txt (line 17)) (1.16.3)
+Requirement already satisfied: tqdm in /usr/local/lib/python3.13/dist-packages (from -r /kaggle/temp/yue2_native/ComfyUI/requirements.txt (line 18)) (4.67.3)
+Requirement already satisfied: psutil in /usr/local/lib/python3.13/dist-packages (from -r /kaggle/temp/yue2_native/ComfyUI/requirements.txt (line 19)) (5.9.5)
+Requirement already satisfied: alembic in /usr/local/lib/python3.13/dist-packages (from -r /kaggle/temp/yue2_native/ComfyUI/requirements.txt (line 20)) (1.20.1)
+Requirement already satisfied: SQLAlchemy>=2.0.0 in /usr/local/lib/python3.13/dist-packages (from -r /kaggle/temp/yue2_native/ComfyUI/requirements.txt (line 21)) (2.1.6)
+Requirement already satisfied: filelock in /usr/local/lib/python3.13/dist-packages (from -r /kaggle/temp/yue2_native/ComfyUI/requirements.txt (line 22)) (4.2.4)
+Collecting av>=17.0.0 (from -r /kaggle/temp/yue2_native/ComfyUI/requirements.txt (line 23))
+  Downloading av-19.0.2-cp312-abi3-manylinux_2_28_x86_64.whl.metadata (5.0 kB)
+Collecting comfy-aimdo==0.6.0 (from -r /kaggle/temp/yue2_native/ComfyUI/requirements.txt (line 24))
+  Downloading comfy_aimdo-0.6.0-cp39-abi3-manylinux2014_x86_64.manylinux_2_17_x86_64.whl.metadata (4.4 kB)
+Collecting comfy-kitchen==0.2.40 (from -r /kaggle/temp/yue2_native/ComfyUI/requirements.txt (line 25))
+  Downloading comfy_kitchen-0.2.40-cp312-abi3-manylinux_2_27_x86_64.manylinux_2_28_x86_64.whl.metadata (19 kB)
+Requirement already satisfied: requests in /usr/local/lib/python3.13/dist-packages (from -r /kaggle/temp/yue2_native/ComfyUI/requirements.txt (line 26)) (2.34.2)
+Collecting simpleeval>=1.0.0 (from -r /kaggle/temp/yue2_native/ComfyUI/requirements.txt (line 27))
+  Downloading simpleeval-1.0.8-py3-none-any.whl.metadata (20 kB)
+Requirement already satisfied: blake3 in /usr/local/lib/python3.13/dist-packages (from -r /kaggle/temp/yue2_native/ComfyUI/requirements.txt (line 28)) (1.0.11)
+Requirement already satisfied: kornia>=0.7.1 in /usr/local/lib/python3.13/dist-packages (from -r /kaggle/temp/yue2_native/ComfyUI/requirements.txt (line 31)) (0.9.0)
+Collecting spandrel (from -r /kaggle/temp/yue2_native/ComfyUI/requirements.txt (line 32))
+  Downloading spandrel-0.4.2-py3-none-any.whl.metadata (15 kB)
+Requirement already satisfied: pydantic~=2.0 in /kaggle/temp/yue2_native/venv/lib/python3.13/site-packages (from -r /kaggle/temp/yue2_native/ComfyUI/requirements.txt (line 33)) (2.11.10)
+Collecting pydantic-settings~=2.0 (from -r /kaggle/temp/yue2_native/ComfyUI/requirements.txt (line 34))
+  Downloading pydantic_settings-2.16.2-py3-none-any.whl.metadata (4.0 kB)
+Requirement already satisfied: PyOpenGL>=3.1.8 in /usr/local/lib/python3.13/dist-packages (from -r /kaggle/temp/yue2_native/ComfyUI/requirements.txt (line 35)) (3.1.10)
+Collecting comfy-angle (from -r /kaggle/temp/yue2_native/ComfyUI/requirements.txt (line 36))
+  Downloading comfy_angle-0.1.1-py3-none-manylinux_2_28_x86_64.whl.metadata (2.2 kB)
+Collecting comfyui-workflow-templates-core==0.3.391 (from comfyui-workflow-templates==0.11.100->-r /kaggle/temp/yue2_native/ComfyUI/requirements.txt (line 2))
+  Downloading comfyui_workflow_templates_core-0.3.391-py3-none-any.whl.metadata (260 bytes)
+Collecting comfyui-workflow-templates-json==0.1.126 (from comfyui-workflow-templates==0.11.100->-r /kaggle/temp/yue2_native/ComfyUI/requirements.txt (line 2))
+  Downloading comfyui_workflow_templates_json-0.1.126-py3-none-any.whl.metadata (266 bytes)
+Collecting comfyui-workflow-templates-media-api==0.3.84 (from comfyui-workflow-templates==0.11.100->-r /kaggle/temp/yue2_native/ComfyUI/requirements.txt (line 2))
+  Downloading comfyui_workflow_templates_media_api-0.3.84-py3-none-any.whl.metadata (290 bytes)
+Collecting comfyui-workflow-templates-media-video==0.3.101 (from comfyui-workflow-templates==0.11.100->-r /kaggle/temp/yue2_native/ComfyUI/requirements.txt (line 2))
+  Downloading comfyui_workflow_templates_media_video-0.3.101-py3-none-any.whl.metadata (283 bytes)
+Collecting comfyui-workflow-templates-media-image==0.3.160 (from comfyui-workflow-templates==0.11.100->-r /kaggle/temp/yue2_native/ComfyUI/requirements.txt (line 2))
+  Downloading comfyui_workflow_templates_media_image-0.3.160-py3-none-any.whl.metadata (283 bytes)
+Collecting comfyui-workflow-templates-media-other==0.3.229 (from comfyui-workflow-templates==0.11.100->-r /kaggle/temp/yue2_native/ComfyUI/requirements.txt (line 2))
+  Downloading comfyui_workflow_templates_media_other-0.3.229-py3-none-any.whl.metadata (306 bytes)
+Collecting comfyui-workflow-templates-media-assets-01==0.1.48 (from comfyui-workflow-templates==0.11.100->-r /kaggle/temp/yue2_native/ComfyUI/requirements.txt (line 2))
+  Downloading comfyui_workflow_templates_media_assets_01-0.1.48-py3-none-any.whl.metadata (290 bytes)
+Collecting comfyui-workflow-templates-media-assets-02==0.1.26 (from comfyui-workflow-templates==0.11.100->-r /kaggle/temp/yue2_native/ComfyUI/requirements.txt (line 2))
+  Downloading comfyui_workflow_templates_media_assets_02-0.1.26-py3-none-any.whl.metadata (290 bytes)
+Requirement already satisfied: annotated-types>=0.6.0 in /usr/local/lib/python3.13/dist-packages (from pydantic~=2.0->-r /kaggle/temp/yue2_native/ComfyUI/requirements.txt (line 33)) (0.8.0)
+Requirement already satisfied: pydantic-core==2.33.2 in /kaggle/temp/yue2_native/venv/lib/python3.13/site-packages (from pydantic~=2.0->-r /kaggle/temp/yue2_native/ComfyUI/requirements.txt (line 33)) (2.33.2)
+Requirement already satisfied: typing-extensions>=4.12.2 in /usr/local/lib/python3.13/dist-packages (from pydantic~=2.0->-r /kaggle/temp/yue2_native/ComfyUI/requirements.txt (line 33)) (4.16.0)
+Requirement already satisfied: typing-inspection>=0.4.0 in /usr/local/lib/python3.13/dist-packages (from pydantic~=2.0->-r /kaggle/temp/yue2_native/ComfyUI/requirements.txt (line 33)) (0.4.4)
+Requirement already satisfied: python-dotenv>=1.2.2 in /usr/local/lib/python3.13/dist-packages (from pydantic-settings~=2.0->-r /kaggle/temp/yue2_native/ComfyUI/requirements.txt (line 34)) (1.2.4)
+Requirement already satisfied: setuptools<82 in /usr/local/lib/python3.13/dist-packages (from torch->-r /kaggle/temp/yue2_native/ComfyUI/requirements.txt (line 4)) (81.0.0)
+Requirement already satisfied: sympy>=1.13.3 in /usr/local/lib/python3.13/dist-packages (from torch->-r /kaggle/temp/yue2_native/ComfyUI/requirements.txt (line 4)) (1.14.0)
+Requirement already satisfied: networkx>=2.5.1 in /usr/local/lib/python3.13/dist-packages (from torch->-r /kaggle/temp/yue2_native/ComfyUI/requirements.txt (line 4)) (3.7)
+Requirement already satisfied: jinja2 in /usr/local/lib/python3.13/dist-packages (from torch->-r /kaggle/temp/yue2_native/ComfyUI/requirements.txt (line 4)) (3.1.6)
+Requirement already satisfied: fsspec>=0.8.5 in /usr/local/lib/python3.13/dist-packages (from torch->-r /kaggle/temp/yue2_native/ComfyUI/requirements.txt (line 4)) (2025.12.0)
+Requirement already satisfied: cuda-toolkit==13.0.2 in /usr/local/lib/python3.13/dist-packages (from cuda-toolkit[cublas,cudart,cufft,cufile,cupti,curand,cusolver,cusparse,nvjitlink,nvrtc,nvtx]==13.0.2; platform_system == "Linux"->torch->-r /kaggle/temp/yue2_native/ComfyUI/requirements.txt (line 4)) (13.0.2)
+Requirement already satisfied: cuda-bindings<14,>=13.0.3 in /usr/local/lib/python3.13/dist-packages (from torch->-r /kaggle/temp/yue2_native/ComfyUI/requirements.txt (line 4)) (13.0.3)
+Requirement already satisfied: nvidia-cudnn-cu13==9.19.0.56 in /usr/local/lib/python3.13/dist-packages (from torch->-r /kaggle/temp/yue2_native/ComfyUI/requirements.txt (line 4)) (9.19.0.56)
+Requirement already satisfied: nvidia-cusparselt-cu13==0.8.0 in /usr/local/lib/python3.13/dist-packages (from torch->-r /kaggle/temp/yue2_native/ComfyUI/requirements.txt (line 4)) (0.8.0)
+Requirement already satisfied: nvidia-nccl-cu13==2.28.9 in /usr/local/lib/python3.13/dist-packages (from torch->-r /kaggle/temp/yue2_native/ComfyUI/requirements.txt (line 4)) (2.28.9)
+Requirement already satisfied: nvidia-nvshmem-cu13==3.4.5 in /usr/local/lib/python3.13/dist-packages (from torch->-r /kaggle/temp/yue2_native/ComfyUI/requirements.txt (line 4)) (3.4.5)
+Requirement already satisfied: triton==3.6.0 in /usr/local/lib/python3.13/dist-packages (from torch->-r /kaggle/temp/yue2_native/ComfyUI/requirements.txt (line 4)) (3.6.0)
+Requirement already satisfied: nvidia-cublas==13.1.0.3.* in /usr/local/lib/python3.13/dist-packages (from cuda-toolkit[cublas,cudart,cufft,cufile,cupti,curand,cusolver,cusparse,nvjitlink,nvrtc,nvtx]==13.0.2; platform_system == "Linux"->torch->-r /kaggle/temp/yue2_native/ComfyUI/requirements.txt (line 4)) (13.1.0.3)
+Requirement already satisfied: nvidia-cuda-runtime==13.0.96.* in /usr/local/lib/python3.13/dist-packages (from cuda-toolkit[cublas,cudart,cufft,cufile,cupti,curand,cusolver,cusparse,nvjitlink,nvrtc,nvtx]==13.0.2; platform_system == "Linux"->torch->-r /kaggle/temp/yue2_native/ComfyUI/requirements.txt (line 4)) (13.0.96)
+Requirement already satisfied: nvidia-cufft==12.0.0.61.* in /usr/local/lib/python3.13/dist-packages (from cuda-toolkit[cublas,cudart,cufft,cufile,cupti,curand,cusolver,cusparse,nvjitlink,nvrtc,nvtx]==13.0.2; platform_system == "Linux"->torch->-r /kaggle/temp/yue2_native/ComfyUI/requirements.txt (line 4)) (12.0.0.61)
+Requirement already satisfied: nvidia-cufile==1.15.1.6.* in /usr/local/lib/python3.13/dist-packages (from cuda-toolkit[cublas,cudart,cufft,cufile,cupti,curand,cusolver,cusparse,nvjitlink,nvrtc,nvtx]==13.0.2; platform_system == "Linux"->torch->-r /kaggle/temp/yue2_native/ComfyUI/requirements.txt (line 4)) (1.15.1.6)
+Requirement already satisfied: nvidia-cuda-cupti==13.0.85.* in /usr/local/lib/python3.13/dist-packages (from cuda-toolkit[cublas,cudart,cufft,cufile,cupti,curand,cusolver,cusparse,nvjitlink,nvrtc,nvtx]==13.0.2; platform_system == "Linux"->torch->-r /kaggle/temp/yue2_native/ComfyUI/requirements.txt (line 4)) (13.0.85)
+Requirement already satisfied: nvidia-curand==10.4.0.35.* in /usr/local/lib/python3.13/dist-packages (from cuda-toolkit[cublas,cudart,cufft,cufile,cupti,curand,cusolver,cusparse,nvjitlink,nvrtc,nvtx]==13.0.2; platform_system == "Linux"->torch->-r /kaggle/temp/yue2_native/ComfyUI/requirements.txt (line 4)) (10.4.0.35)
+Requirement already satisfied: nvidia-cusolver==12.0.4.66.* in /usr/local/lib/python3.13/dist-packages (from cuda-toolkit[cublas,cudart,cufft,cufile,cupti,curand,cusolver,cusparse,nvjitlink,nvrtc,nvtx]==13.0.2; platform_system == "Linux"->torch->-r /kaggle/temp/yue2_native/ComfyUI/requirements.txt (line 4)) (12.0.4.66)
+Requirement already satisfied: nvidia-cusparse==12.6.3.3.* in /usr/local/lib/python3.13/dist-packages (from cuda-toolkit[cublas,cudart,cufft,cufile,cupti,curand,cusolver,cusparse,nvjitlink,nvrtc,nvtx]==13.0.2; platform_system == "Linux"->torch->-r /kaggle/temp/yue2_native/ComfyUI/requirements.txt (line 4)) (12.6.3.3)
+Requirement already satisfied: nvidia-nvjitlink==13.0.88.* in /usr/local/lib/python3.13/dist-packages (from cuda-toolkit[cublas,cudart,cufft,cufile,cupti,curand,cusolver,cusparse,nvjitlink,nvrtc,nvtx]==13.0.2; platform_system == "Linux"->torch->-r /kaggle/temp/yue2_native/ComfyUI/requirements.txt (line 4)) (13.0.88)
+Requirement already satisfied: nvidia-cuda-nvrtc==13.0.88.* in /usr/local/lib/python3.13/dist-packages (from cuda-toolkit[cublas,cudart,cufft,cufile,cupti,curand,cusolver,cusparse,nvjitlink,nvrtc,nvtx]==13.0.2; platform_system == "Linux"->torch->-r /kaggle/temp/yue2_native/ComfyUI/requirements.txt (line 4)) (13.0.88)
+Requirement already satisfied: nvidia-nvtx==13.0.85.* in /usr/local/lib/python3.13/dist-packages (from cuda-toolkit[cublas,cudart,cufft,cufile,cupti,curand,cusolver,cusparse,nvjitlink,nvrtc,nvtx]==13.0.2; platform_system == "Linux"->torch->-r /kaggle/temp/yue2_native/ComfyUI/requirements.txt (line 4)) (13.0.85)
+Requirement already satisfied: cuda-pathfinder~=1.1 in /usr/local/lib/python3.13/dist-packages (from cuda-bindings<14,>=13.0.3->torch->-r /kaggle/temp/yue2_native/ComfyUI/requirements.txt (line 4)) (1.8.4)
+Collecting trampoline>=0.1.2 (from torchsde->-r /kaggle/temp/yue2_native/ComfyUI/requirements.txt (line 5))
+  Downloading trampoline-0.1.2-py3-none-any.whl.metadata (10 kB)
+Requirement already satisfied: huggingface-hub<1.0,>=0.34.0 in /kaggle/temp/yue2_native/venv/lib/python3.13/site-packages (from transformers>=4.50.3->-r /kaggle/temp/yue2_native/ComfyUI/requirements.txt (line 9)) (0.36.2)
+Requirement already satisfied: packaging>=20.0 in /usr/local/lib/python3.13/dist-packages (from transformers>=4.50.3->-r /kaggle/temp/yue2_native/ComfyUI/requirements.txt (line 9)) (26.3)
+Requirement already satisfied: regex!=2019.12.17 in /usr/local/lib/python3.13/dist-packages (from transformers>=4.50.3->-r /kaggle/temp/yue2_native/ComfyUI/requirements.txt (line 9)) (2025.11.3)
+Requirement already satisfied: hf-xet<2.0.0,>=1.1.3 in /usr/local/lib/python3.13/dist-packages (from huggingface-hub<1.0,>=0.34.0->transformers>=4.50.3->-r /kaggle/temp/yue2_native/ComfyUI/requirements.txt (line 9)) (1.7.0)
+Requirement already satisfied: aiohappyeyeballs>=2.5.0 in /usr/local/lib/python3.13/dist-packages (from aiohttp>=3.11.8->-r /kaggle/temp/yue2_native/ComfyUI/requirements.txt (line 13)) (2.7.1)
+Requirement already satisfied: aiosignal>=1.4.0 in /usr/local/lib/python3.13/dist-packages (from aiohttp>=3.11.8->-r /kaggle/temp/yue2_native/ComfyUI/requirements.txt (line 13)) (1.4.0)
+Requirement already satisfied: attrs>=17.3.0 in /usr/local/lib/python3.13/dist-packages (from aiohttp>=3.11.8->-r /kaggle/temp/yue2_native/ComfyUI/requirements.txt (line 13)) (26.1.0)
+Requirement already satisfied: frozenlist>=1.1.1 in /usr/local/lib/python3.13/dist-packages (from aiohttp>=3.11.8->-r /kaggle/temp/yue2_native/ComfyUI/requirements.txt (line 13)) (1.8.0)
+Requirement already satisfied: multidict<8.0,>=4.5 in /usr/local/lib/python3.13/dist-packages (from aiohttp>=3.11.8->-r /kaggle/temp/yue2_native/ComfyUI/requirements.txt (line 13)) (6.9.1)
+Requirement already satisfied: propcache>=0.2.0 in /usr/local/lib/python3.13/dist-packages (from aiohttp>=3.11.8->-r /kaggle/temp/yue2_native/ComfyUI/requirements.txt (line 13)) (0.5.4)
+Requirement already satisfied: idna>=2.0 in /usr/local/lib/python3.13/dist-packages (from yarl>=1.18.0->-r /kaggle/temp/yue2_native/ComfyUI/requirements.txt (line 14)) (3.20)
+Requirement already satisfied: Mako in /usr/local/lib/python3.13/dist-packages (from alembic->-r /kaggle/temp/yue2_native/ComfyUI/requirements.txt (line 20)) (1.4.3)
+Requirement already satisfied: charset_normalizer<4,>=2 in /usr/local/lib/python3.13/dist-packages (from requests->-r /kaggle/temp/yue2_native/ComfyUI/requirements.txt (line 26)) (3.4.9)
+Requirement already satisfied: urllib3<3,>=1.26 in /usr/local/lib/python3.13/dist-packages (from requests->-r /kaggle/temp/yue2_native/ComfyUI/requirements.txt (line 26)) (2.8.0)
+Requirement already satisfied: certifi>=2023.5.7 in /usr/local/lib/python3.13/dist-packages (from requests->-r /kaggle/temp/yue2_native/ComfyUI/requirements.txt (line 26)) (2026.10.23)
+Requirement already satisfied: kornia-rs>=0.2.0 in /usr/local/lib/python3.13/dist-packages (from kornia>=0.7.1->-r /kaggle/temp/yue2_native/ComfyUI/requirements.txt (line 31)) (0.2.0)
+Requirement already satisfied: mpmath<1.4,>=1.1.0 in /usr/local/lib/python3.13/dist-packages (from sympy>=1.13.3->torch->-r /kaggle/temp/yue2_native/ComfyUI/requirements.txt (line 4)) (1.3.0)
+Requirement already satisfied: MarkupSafe>=2.0 in /usr/local/lib/python3.13/dist-packages (from jinja2->torch->-r /kaggle/temp/yue2_native/ComfyUI/requirements.txt (line 4)) (3.0.4)
+Downloading comfyui_frontend_package-1.57.4-py3-none-any.whl (24.6 MB)
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 24.6/24.6 MB 320.3 MB/s  0:00:00
+Downloading comfyui_workflow_templates-0.11.100-py3-none-any.whl (10 kB)
+Downloading comfyui_embedded_docs-0.5.15-py3-none-any.whl (24.1 MB)
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 24.1/24.1 MB 348.6 MB/s  0:00:00
+Downloading comfy_aimdo-0.6.0-cp39-abi3-manylinux2014_x86_64.manylinux_2_17_x86_64.whl (442 kB)
+Downloading comfy_kitchen-0.2.40-cp312-abi3-manylinux_2_27_x86_64.manylinux_2_28_x86_64.whl (67.8 MB)
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 67.8/67.8 MB 307.8 MB/s  0:00:00
+Downloading comfyui_workflow_templates_core-0.3.391-py3-none-any.whl (87 kB)
+Downloading comfyui_workflow_templates_json-0.1.126-py3-none-any.whl (4.3 MB)
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 4.3/4.3 MB 399.2 MB/s  0:00:00
+Downloading comfyui_workflow_templates_media_api-0.3.84-py3-none-any.whl (100.1 MB)
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 100.1/100.1 MB 475.7 MB/s  0:00:00
+Downloading comfyui_workflow_templates_media_assets_01-0.1.48-py3-none-any.whl (94.2 MB)
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 94.2/94.2 MB 446.5 MB/s  0:00:00
+Downloading comfyui_workflow_templates_media_assets_02-0.1.26-py3-none-any.whl (54.2 MB)
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 54.2/54.2 MB 279.3 MB/s  0:00:00
+Downloading comfyui_workflow_templates_media_image-0.3.160-py3-none-any.whl (89.4 MB)
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 89.4/89.4 MB 470.6 MB/s  0:00:00
+Downloading comfyui_workflow_templates_media_other-0.3.229-py3-none-any.whl (89.1 MB)
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 89.1/89.1 MB 501.7 MB/s  0:00:00
+Downloading comfyui_workflow_templates_media_video-0.3.101-py3-none-any.whl (104.3 MB)
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 104.3/104.3 MB 384.7 MB/s  0:00:00
+Downloading pydantic_settings-2.16.2-py3-none-any.whl (81 kB)
+Downloading torchsde-0.2.6-py3-none-any.whl (61 kB)
+Downloading av-19.0.2-cp312-abi3-manylinux_2_28_x86_64.whl (35.0 MB)
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 35.0/35.0 MB 429.5 MB/s  0:00:00
+Downloading simpleeval-1.0.8-py3-none-any.whl (18 kB)
+Downloading spandrel-0.4.2-py3-none-any.whl (320 kB)
+Downloading comfy_angle-0.1.1-py3-none-manylinux_2_28_x86_64.whl (5.1 MB)
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 5.1/5.1 MB 469.8 MB/s  0:00:00
+Downloading trampoline-0.1.2-py3-none-any.whl (5.2 kB)
+Installing collected packages: trampoline, simpleeval, comfyui-workflow-templates-media-video, comfyui-workflow-templates-media-other, comfyui-workflow-templates-media-image, comfyui-workflow-templates-media-assets-02, comfyui-workflow-templates-media-assets-01, comfyui-workflow-templates-media-api, comfyui-workflow-templates-json, comfyui-workflow-templates-core, comfyui-frontend-package, comfyui-embedded-docs, comfy-kitchen, comfy-angle, comfy-aimdo, av, comfyui-workflow-templates, pydantic-settings, torchsde, spandrel
+
+Successfully installed av-19.0.2 comfy-aimdo-0.6.0 comfy-angle-0.1.1 comfy-kitchen-0.2.40 comfyui-embedded-docs-0.5.15 comfyui-frontend-package-1.57.4 comfyui-workflow-templates-0.11.100 comfyui-workflow-templates-core-0.3.391 comfyui-workflow-templates-json-0.1.126 comfyui-workflow-templates-media-api-0.3.84 comfyui-workflow-templates-media-assets-01-0.1.48 comfyui-workflow-templates-media-assets-02-0.1.26 comfyui-workflow-templates-media-image-0.3.160 comfyui-workflow-templates-media-other-0.3.229 comfyui-workflow-templates-media-video-0.3.101 pydantic-settings-2.16.2 simpleeval-1.0.8 spandrel-0.4.2 torchsde-0.2.6 trampoline-0.1.2
+ComfyUI 423cbd20511b installed with the KaggleYuE2 node pack at /kaggle/temp/yue2_native/ComfyUI
+[INFO] setup plugin alembic.autogenerate.schemas
+[INFO] setup plugin alembic.autogenerate.tables
+[INFO] setup plugin alembic.autogenerate.types
+[INFO] setup plugin alembic.autogenerate.constraints
+[INFO] setup plugin alembic.autogenerate.defaults
+[INFO] setup plugin alembic.autogenerate.comments
+[INFO] setup plugin alembic.ext.checkconstraint_byname
+[INFO] Setting output directory to: /kaggle/working/yue2_native/runs
+[INFO] Found comfy_kitchen backend hip: {'available': False, 'disabled': False, 'unavailable_reason': 'PyTorch ROCm/HIP runtime not available', 'capabilities': []}
+[INFO] Found comfy_kitchen backend cuda: {'available': True, 'disabled': False, 'unavailable_reason': None, 'capabilities': ['adaln', 'apply_rope', 'apply_rope1', 'apply_rope1_', 'apply_rope_', 'apply_rope_split_half', 'apply_rope_split_half1', 'apply_rope_split_half1_', 'apply_rope_split_half_', 'closest_point_on_mesh', 'connected_components', 'convrot_w4a4_linear', 'delaunay3d', 'dequantize_convrot_w4a4_weight', 'dequantize_int8_convrot_weight', 'dequantize_int8_convrot_weight_dtype', 'dequantize_int8_simple', 'dequantize_int8_simple_dtype', 'dequantize_nvfp4', 'dequantize_per_tensor_fp8', 'dequantize_w4a8_int8_weight', 'edge_collapse_checks', 'fp16_conv3d', 'fp16_conv3d_out', 'fp16_linear', 'gemv_awq_w4a16', 'group_norm_silu_pad3d', 'group_norm_silu_pad3d_out', 'group_norm_stats3d', 'int8_linear', 'mesh_bvh', 'min_cut', 'na3d', 'prepare_int4_weight_for_int8_linear', 'quantize_and_rotate_rowwise', 'quantize_convrot_w4a4_weight', 'quantize_int8_convrot_weight', 'quantize_int8_rowwise', 'quantize_int8_tensorwise', 'quantize_mxfp8', 'quantize_nvfp4', 'quantize_per_tensor_fp8', 'quantize_svdquant_w4a4', 'quantize_w4a8_int8_weight', 'rms_adaln', 'rms_rope', 'rms_rope1', 'rms_rope1_', 'rms_rope_', 'rms_rope_split_half', 'rms_rope_split_half1', 'rms_rope_split_half1_', 'rms_rope_split_half_', 'rotate_int8_convrot_weight', 'scaled_mm_nvfp4', 'scaled_mm_svdquant_w4a4', 'sol_attn', 'stochastic_rounding_fp8', 'w4a8_int8_linear', 'w4a8_packed_linear']}
+[INFO] Found comfy_kitchen backend triton: {'available': True, 'disabled': True, 'unavailable_reason': None, 'capabilities': ['adaln', 'apply_rope', 'apply_rope1', 'apply_rope1_', 'apply_rope_', 'apply_rope_split_half', 'apply_rope_split_half1', 'apply_rope_split_half1_', 'apply_rope_split_half_', 'dequantize_nvfp4', 'dequantize_per_tensor_fp8', 'int8_linear', 'na3d', 'quantize_and_rotate_rowwise', 'quantize_int8_rowwise', 'quantize_mxfp8', 'quantize_nvfp4', 'quantize_per_tensor_fp8', 'rms_adaln', 'rms_rope', 'rms_rope1', 'rms_rope1_', 'rms_rope_', 'rms_rope_split_half', 'rms_rope_split_half1', 'rms_rope_split_half1_', 'rms_rope_split_half_', 'w4a8_int8_linear']}
+[INFO] Found comfy_kitchen backend ascend: {'available': False, 'disabled': False, 'unavailable_reason': "torch-npu is not installed: No module named 'torch_npu'", 'capabilities': []}
+[INFO] Found comfy_kitchen backend eager: {'available': True, 'disabled': False, 'unavailable_reason': None, 'capabilities': ['adaln', 'apply_rope', 'apply_rope1', 'apply_rope1_', 'apply_rope_', 'apply_rope_split_half', 'apply_rope_split_half1', 'apply_rope_split_half1_', 'apply_rope_split_half_', 'convrot_w4a4_linear', 'dequantize_convrot_w4a4_weight', 'dequantize_int8_convrot_weight', 'dequantize_int8_convrot_weight_dtype', 'dequantize_int8_embedding', 'dequantize_int8_simple', 'dequantize_int8_simple_dtype', 'dequantize_mxfp8', 'dequantize_nvfp4', 'dequantize_per_tensor_fp8', 'dequantize_w4a8_int8_weight', 'fp16_conv3d', 'fp16_conv3d_out', 'fp16_linear', 'gemv_awq_w4a16', 'group_norm_silu_pad3d', 'group_norm_silu_pad3d_out', 'group_norm_stats3d', 'int8_linear', 'int8_linear_modulated', 'int8_linear_rms_modulated', 'na3d', 'prepare_int4_weight_for_int8_linear', 'quantize_and_rotate_rowwise', 'quantize_convrot_w4a4_weight', 'quantize_int8_convrot_weight', 'quantize_int8_rowwise', 'quantize_int8_tensorwise', 'quantize_mxfp8', 'quantize_nvfp4', 'quantize_per_tensor_fp8', 'quantize_svdquant_w4a4', 'quantize_w4a8_int8_weight', 'rms_adaln', 'rms_gated_residual', 'rms_rope', 'rms_rope1', 'rms_rope1_', 'rms_rope_', 'rms_rope_split_half', 'rms_rope_split_half1', 'rms_rope_split_half1_', 'rms_rope_split_half_', 'rotate_int8_convrot_weight', 'scaled_mm_mxfp8', 'scaled_mm_nvfp4', 'scaled_mm_svdquant_w4a4', 'sol_attn', 'stochastic_rounding_fp8', 'w4a8_int8_linear', 'w4a8_packed_linear']}
+[INFO] Checkpoint files will always be loaded safely.
+[INFO] Total VRAM 14912 MB, total RAM 29696 MB
+[INFO] RAM limited by cgroup to 29696 MB (host has 32099 MB)
+[INFO] pytorch version: 2.11.0+cu130
+[INFO] Set vram state to: NORMAL_VRAM
+[INFO] Device: cuda:0 Tesla T4 : cudaMallocAsync
+[INFO] Device: cuda:1 Tesla T4 : cudaMallocAsync
+[INFO] Using async weight offloading with 2 streams
+[INFO] Enabled pinned memory 13312
+[INFO] Using pytorch attention
+[INFO] aimdo: /project/src/control.c:283:INFO:comfy-aimdo inited for GPU: Tesla T4 (VRAM: 14911 MB)
+[INFO] aimdo: /project/src/control.c:283:INFO:comfy-aimdo inited for GPU: Tesla T4 (VRAM: 14911 MB)
+[INFO] DynamicVRAM support detected and enabled
+[INFO] Python version: 3.13.16 (main, Oct  1 2026, 15:40:24) [GCC 13.3.0]
+[INFO] ComfyUI version: 0.43.2
+[INFO] comfy-aimdo version: 0.6.0
+[INFO] comfy-kitchen version: 0.2.40
+[INFO] comfyui-frontend-package version: 1.57.4
+[INFO] comfyui-workflow-templates version: 0.11.100
+[INFO] comfyui-embedded-docs version: 0.5.15
+[INFO] comfy-aimdo version: 0.6.0
+[INFO] comfy-kitchen version: 0.2.40
+[INFO] [Prompt Server] web root: /kaggle/temp/yue2_native/venv/lib/python3.13/site-packages/comfyui_frontend_package/static
+[INFO] Asset seeder disabled
+[INFO] No OpenGL_accelerate module loaded: No module named 'OpenGL_accelerate'
+[INFO] NumExpr defaulting to 4 threads.
+WARNING: All log messages before absl::InitializeLog() is called are written to STDERR
+I0000 00:00:1793813470.198995     263 cudart_stub.cc:31] Could not find cuda drivers on your machine, GPU will not be used.
+[INFO] 
+Import times for custom nodes:
+[INFO]    0.0 seconds: /kaggle/temp/yue2_native/ComfyUI/custom_nodes/websocket_image_save.py
+[INFO]    7.1 seconds: /kaggle/temp/yue2_native/ComfyUI/custom_nodes/KaggleYuE2
+[INFO] 
+[INFO] Using RAM pressure cache.
+[INFO] ComfyUI is developed by Comfy Org. We also offer commercial products to deploy ComfyUI as scalable cloud endpoints. Visit platform.comfy.org/ascii for more information.
+[INFO] Starting server
+
+[INFO] To see the GUI go to: http://127.0.0.1:8188
+Fetching the optional Cloudflare executable on Kaggle; no model download.
+
+In ComfyUI: Workflows → YuE2 Full Song / YuE2 Cover · or press Run on the opened canvas
+Full-song canvas:  https://citizen-progressive-sectors-lending.trycloudflare.com/?yue2_workflow=song
+Cover canvas:      https://citizen-progressive-sectors-lending.trycloudflare.com/?yue2_workflow=cover
+Open the YuE2 full-song canvas
+Open the YuE2 cover canvas
+Open plain ComfyUI
+Saved songs so far:
+Keep this Kaggle session and this cell running while using ComfyUI.
+Generate from the canvas: Queue Prompt. Stop interrupts at a step boundary and saves earlier stages.
+[INFO] got prompt
+Initializing YuE2-3B engine: MoT on cuda:0 (CUDA graphs), VAE on cuda:1...
+All Turing T4 runtime patches applied successfully.
+[YuE2] Run 20261104T173334Z-5e132b8035; seed 654607220
+GPU memory/process preflight: {
+  "caller_pid": 263,
+  "devices": [
+    {
+      "index": 0,
+      "uuid": "GPU-91fb09b4-934c-c9f3-6536-db5d45c6ce7e",
+      "total_mib": 15360,
+      "free_mib": 14807
+    },
+    {
+      "index": 1,
+      "uuid": "GPU-3781da5d-440c-e792-2ae6-a109d9987d8d",
+      "total_mib": 15360,
+      "free_mib": 14807
+    }
+  ],
+  "applications": [
+    {
+      "pid": 263,
+      "gpu_uuid": "GPU-91fb09b4-934c-c9f3-6536-db5d45c6ce7e",
+      "used_mib": "102",
+      "process_name": "python",
+      "is_checking_process": true
+    },
+    {
+      "pid": 263,
+      "gpu_uuid": "GPU-3781da5d-440c-e792-2ae6-a109d9987d8d",
+      "used_mib": "102",
+      "process_name": "python",
+      "is_checking_process": true
+    }
+  ]
+}
+
+Initializing YuE2 pipeline from pinned model assets...
+
+Resolving model files: 0it [00:00, ?it/s]
+Resolving model files: 0it [00:00, ?it/s]
+
+Verifying model files: 0it [00:00, ?it/s]
+Verifying model files: 0it [00:55, ?it/s]YuE2-3B Pipeline initialized: MoT on cuda:0 (CUDA graphs on), VAE on cuda:1.
+[YuE2] YuE2 engine loaded in 55.4s | attention={'efficient_grouped_shapes': 0, 'native_fallback_shapes': 0} ar={'execution': 'not_started', 'fallback_reason': None}
+
+[ERROR] !!! Exception during processing !!! 'bool' object has no attribute '_cancelled'
+[ERROR] Traceback (most recent call last):
+  File "/kaggle/temp/yue2_native/ComfyUI/execution.py", line 548, in execute
+    output_data, output_ui, has_subgraph, has_pending_tasks = await get_output_data(prompt_id, unique_id, obj, input_data_all, execution_block_cb=execution_block_cb, pre_execute_cb=pre_execute_cb, v3_data=v3_data)
+                                                              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/kaggle/temp/yue2_native/ComfyUI/execution.py", line 353, in get_output_data
+    return_values = await _async_map_node_over_list(prompt_id, unique_id, obj, input_data_all, obj.FUNCTION, allow_interrupt=True, execution_block_cb=execution_block_cb, pre_execute_cb=pre_execute_cb, v3_data=v3_data)
+                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/kaggle/temp/yue2_native/ComfyUI/execution.py", line 327, in _async_map_node_over_list
+    await process_inputs(input_dict, i)
+  File "/kaggle/temp/yue2_native/ComfyUI/execution.py", line 315, in process_inputs
+    result = f(**inputs)
+  File "/kaggle/temp/yue2_native/ComfyUI/custom_nodes/KaggleYuE2/__init__.py", line 301, in execute
+    cfg_scale=float(cfg_scale), cancelled=engine._cancelled)
+                                          ^^^^^^^^^^^^^^^^^
+AttributeError: 'bool' object has no attribute '_cancelled'
+
+[INFO] Prompt executed in 56.01 seconds
+[INFO] 
+Stopped server
+---------------------------------------------------------------------------
+KeyboardInterrupt                         Traceback (most recent call last)
+/tmp/ipykernel_50/2056239625.py in <cell line: 0>()
+    198     try:
+    199         while comfy_process.poll() is None:
+--> 200             _time.sleep(5)
+    201         raise RuntimeError("ComfyUI server stopped; inspect the log above.")
+    202     finally:
+
+KeyboardInterrupt: 
