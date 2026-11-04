@@ -46,3 +46,49 @@ ComfyUI's built-in upload button sends the whole song as ONE request:
 3. Settings: **Internet ON**, **Accelerator None** is fine → **Run All**.
 4. Click the ☁️ Canvas link. For each song: open the 📤 Upload songs link, drop the
    file, wait for 100%, go back to the canvas, pick the song, Run.
+
+---
+
+# Hotfix addendum — YuE2 music notebook wheelhouse self-heal — 2026-11-04 (later)
+
+## What broke on Kaggle (your paste)
+The music notebook crashed during setup:
+`ERROR: No matching distribution found for comfyui-frontend-package==1.57.4`
+→ `CalledProcessError` in `install_comfyui`.
+
+## Why it broke (the honest, checked answer)
+- ComfyUI v0.43.2 (the pinned canvas) needs **five new packages** the old ComfyUI
+  never had: `comfyui-frontend-package==1.57.4`, `comfyui-workflow-templates`,
+  `comfyui-embedded-docs`, `comfy-aimdo`, `comfy-kitchen`.
+- Your saved asset dataset was built **before** those existed, so its wheelhouse
+  does not contain them.
+- The notebook ran pip with a hard "no downloads" wall (`PIP_NO_INDEX=1`) → one
+  missing wheel killed the whole setup. Your dataset is NOT broken — it simply
+  predates a ComfyUI update.
+
+## What the fix does (no dataset rebuild, nothing to upload)
+`kaggle_yue2/runtime.py` now has `pip_install()`: **saved wheels first, always**.
+Only if a wheel is missing does it fetch exactly that gap from PyPI, with your
+saved wheelhouse and the Kaggle version locks still enforced. If both paths fail
+you get a plain-English explanation instead of a pip wall of text. Your model
+downloads stay fully offline.
+
+## Proof (all automated, real pip, real PyPI)
+| Test | Result |
+|---|---|
+| Old path reproduced the **exact** Kaggle error line | PASS |
+| New helper: same env → fetched only the gap, installed 1.57.4 exactly | PASS |
+| Complete wheelhouse → stays 100 % offline (no fallback call) | PASS |
+| Full repo suite | 82 passed (+7 subtests) |
+
+## Files (all rebuilt with the fix inside)
+- `yue2-3b-frontier-full-song-music-generation.ipynb` ← import this one (Music)
+- `yue2-music-revision-13.zip` (full repo source, 35 files)
+- `Song-Timestamp-Studio-Canvas.zip` (studio, same fix inside)
+
+## Your steps (music notebook)
+1. Kaggle → **Create → Import Notebook** → upload `yue2-3b-frontier-full-song-music-generation.ipynb`
+   (or File → Import Notebook inside an existing notebook).
+2. Add Input → your **same** `yue2-music-assets` dataset (unchanged).
+3. Settings: **GPU T4 ×2**, **Internet ON** → **Run All**.
+4. Watch for `ComfyUI 423cbd20511b installed` and the ☁️ Cloudflare links.

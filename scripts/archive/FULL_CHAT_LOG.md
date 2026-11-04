@@ -139,3 +139,24 @@ on the original AIQUEST Academy notebook — the old 5-cell layout.
    engine; nudge exact); real-browser audit loaded all 7 nodes with no errors.
 4. GitHub task updated: upload the 35 files in yue2-music-revision-12.zip +
    Song-Timestamp-Studio-Canvas.ipynb, then reply "done".
+
+---
+
+## Part 9 — "Look at this!!!" music notebook crash → FIXED in one pass (2026-11-04)
+
+1. **What you saw:** the MUSIC notebook (YuE2, not the studio) crashed in setup with
+   `ERROR: No matching distribution found for comfyui-frontend-package==1.57.4`.
+2. **Why:** ComfyUI v0.43.2 needs 5 new packages; your saved dataset's wheelhouse
+   was built earlier and did not have them; the notebook had a hard "no downloads"
+   wall, so one missing wheel stopped everything. Your dataset is NOT broken.
+3. **The fix (one re-import, no uploads, no dataset rebuild):** the notebook now
+   tries your saved wheels first, and only fetches the missing wheel(s) from PyPI.
+   Everything else stays offline and locked, exactly as before.
+4. **Proof:** the exact crash was reproduced on a real pip; the fixed code then
+   installed the missing wheel by itself; a complete wheelhouse still installs
+   with zero internet calls. Full repo suite: 82 passed (+7 subtests).
+5. **Delivered:** `yue2-3b-frontier-full-song-music-generation.ipynb` (import this),
+   `yue2-music-revision-13.zip` (35 files, full source), studio zip updated too.
+6. **Note:** my sandbox has no GitHub keys, so the commit sits in the local repo
+   (77818b8); like revision 11, the ZIP is the delivery. If you want it on GitHub,
+   upload the zip contents at github.com (web UI) and reply "done".

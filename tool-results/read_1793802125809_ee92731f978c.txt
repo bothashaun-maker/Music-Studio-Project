@@ -1,0 +1,532 @@
+     1→"""Notebook-facing orchestration. Imports do not install packages or start services."""
+     2→from __future__ import annotations
+     3→
+     4→from dataclasses import asdict, dataclass
+     5→import importlib.metadata
+     6→import json
+     7→import math
+     8→import os
+     9→from pathlib import Path
+    10→import platform
+    11→import shutil
+    12→import socket
+    13→import subprocess
+    14→import sys
+    15→import time
+    16→import urllib.error
+    17→import urllib.request
+    18→import uuid
+    19→
+    20→from .recovery import atomic_json, digest, read_json, sha256_file
+    21→
+    22→COMFY_COMMIT = "bc5f880dbdd43e426077f42ccec53bb577ffee9f"
+    23→MODEL_REVISION = "2f76ca75e6ee094169de899cc7fc99d6887e2196"
+    24→CHECKPOINT = "yue2_3b_int8_convrot.safetensors"
+    25→MODEL_SHA256 = "96fe199377309001ed8cd26a944baeee8cc31a20ba7c36d1d3c0a7e1f4149db6"
+    26→MODEL_SIZE = 3960938800
+    27→OBSERVER_VERSION = 1
+    28→PIP_VERSION = "25.3"
+    29→PIP_WHEEL = f"pip-{PIP_VERSION}-py3-none-any.whl"
+    30→PIP_URL = ("https://files.pythonhosted.org/packages/44/3c/"
+    31→           "d717024885424591d5376220b5e836c2d5293ce2011523c9de23ff7bf068/" + PIP_WHEEL)
+    32→PIP_SHA256 = "9655943313a94722b7774661c21049070f6bbb0a1516bf02f7c8d5d9201514cd"
+    33→
+    34→
+    35→def command(args, *, cwd=None, env=None, capture=False):
+    36→    try:
+    37→        return subprocess.run([str(x) for x in args], cwd=cwd, env=env, check=True,
+    38→                              text=True, capture_output=capture)
+    39→    except subprocess.CalledProcessError as exc:
+    40→        if capture:
+    41→            print((exc.stderr or exc.stdout or "")[-6000:], file=sys.stderr)
+    42→        raise
+    43→
+    44→
+    45→def read_tail(path, lines=25):
+    46→    path = Path(path)
+    47→    if not path.exists():
+    48→        return "(no log yet)"
+    49→    # Seek backwards rather than loading hours of progress output into RAM.
+    50→    with path.open("rb") as stream:
+    51→        stream.seek(0, 2)
+    52→        stream.seek(max(0, stream.tell() - 16000))
+    53→        return "\n".join(stream.read().decode(errors="replace").splitlines()[-lines:])
+    54→
+    55→
+    56→@dataclass(frozen=True)
+    57→class SongConfig:
+    58→    style: str
+    59→    lyrics: str
+    60→    max_duration: float = 30.0
+    61→    mode: str = "full"
+    62→    abc: str = ""
+    63→    abc_seed: int = 10
+    64→    semantic_seed: int = 17
+    65→    acoustic_seed: int = 7
+    66→    max_abc_tokens: int = 4096
+    67→    steps: int = 32
+    68→    semantic_cfg: float = 1.0
+    69→    tile_size: int = 512
+    70→    tile_overlap: int = 64
+    71→    plan_only: bool = False
+    72→
+    73→    def __post_init__(self):
+    74→        if not isinstance(self.style, str) or not self.style.strip():
+    75→            raise ValueError("Provide a style prompt")
+    76→        if not isinstance(self.lyrics, str) or not self.lyrics.strip():
+    77→            raise ValueError("Provide complete, section-tagged lyrics")
+    78→        if not math.isfinite(self.max_duration) or not 8 <= self.max_duration <= 480:
+    79→            raise ValueError("Maximum duration must be 8..480 seconds (up to eight minutes)")
+    80→        if self.mode not in {"full", "melody", "off"}:
+    81→            raise ValueError("Planning mode must be full, melody or off")
+    82→        if not isinstance(self.abc, str) or type(self.plan_only) is not bool:
+    83→            raise ValueError("ABC must be text and plan_only must be a boolean")
+    84→        if self.mode == "off" and (self.abc.strip() or self.plan_only):
+    85→            raise ValueError("ABC and plan-only require full or melody planning")
+    86→        for seed in (self.abc_seed, self.semantic_seed, self.acoustic_seed):
+    87→            if type(seed) is not int or not 0 <= seed < 2**63:
+    88→                raise ValueError("Each seed must be an integer in 0..2**63-1")
+    89→        if type(self.max_abc_tokens) is not int or not 32 <= self.max_abc_tokens <= 16000:
+    90→            raise ValueError("ABC budget must be an integer in 32..16000")
+    91→        if type(self.steps) is not int or not 8 <= self.steps <= 64:
+    92→            raise ValueError("Acoustic steps must be an integer in 8..64")
+    93→        if not math.isfinite(self.semantic_cfg) or not 1 <= self.semantic_cfg <= 2:
+    94→            raise ValueError("Semantic CFG must be 1..2; start with 1 to save memory")
+    95→        if (type(self.tile_size) is not int or self.tile_size % 8 or not 64 <= self.tile_size <= 2048
+    96→                or type(self.tile_overlap) is not int or self.tile_overlap % 8
+    97→                or not 8 <= self.tile_overlap < self.tile_size // 2):
+    98→            raise ValueError("Use tile/overlap multiples of 8; overlap must be below half the tile")
+    99→
+   100→
+   101→def build_prompt(song, spec, *, decode_only=False):
+   102→    """Build an API graph, not a frontend workflow with stale widget values."""
+   103→    run_spec = json.dumps(spec, sort_keys=True)
+   104→    graph = {"1": {"class_type": "CheckpointLoaderSimple", "inputs": {"ckpt_name": CHECKPOINT}}}
+   105→    if decode_only:
+   106→        graph["6"] = {"class_type": "YuE2LoadLatents", "inputs": {"run_spec": run_spec}}
+   107→    else:
+   108→        graph["2"] = {"class_type": "YuE2RunContext", "inputs": {"clip": ["1", 1], "run_spec": run_spec}}
+   109→        abc = song.abc
+   110→        if song.mode != "off" and not abc.strip():
+   111→            graph["3"] = {"class_type": "YuE2GenerateABC", "inputs": {
+   112→                "clip": ["2", 0], "style": song.style, "lyrics": song.lyrics,
+   113→                "seed": song.abc_seed, "mode": song.mode, "max_abc_tokens": song.max_abc_tokens,
+   114→                "temperature": 0.7, "top_p": 0.9, "top_k": 30,
+   115→                "repetition_penalty": 1.005, "penalty_window": 100,
+   116→            }}
+   117→            abc = ["3", 0]
+   118→        if song.mode != "off":
+   119→            # For supplied scores the music node still depends on run context.
+   120→            # A context input on the persistence node ensures it also runs first.
+   121→            graph["4"] = {"class_type": "YuE2PersistABC", "inputs": {"abc": abc, "clip": ["2", 0]}}
+   122→            abc = ["4", 0]
+   123→        if song.plan_only:
+   124→            return graph
+   125→        graph["5"] = {"class_type": "YuE2GenerateMusic", "inputs": {
+   126→            "clip": ["2", 0], "style": song.style, "lyrics": song.lyrics,
+   127→            "abc": abc, "seed": song.semantic_seed,
+   128→            "mode": song.mode if song.mode != "off" else "melody",
+   129→            "max_duration": song.max_duration, "temperature": 1.0, "top_p": 0.95,
+   130→            "top_k": 100, "repetition_penalty": 1.2, "cfg_scale": song.semantic_cfg,
+   131→        }}
+   132→        graph["6"] = {"class_type": "EmptyYuE2LatentAudio", "inputs": {"seconds": ["5", 1], "batch_size": 1}}
+   133→        graph["7"] = {"class_type": "KSampler", "inputs": {
+   134→            "model": ["1", 0], "positive": ["5", 0], "negative": ["5", 0],
+   135→            "latent_image": ["6", 0], "seed": song.acoustic_seed, "steps": song.steps,
+   136→            "cfg": 1.0, "sampler_name": "dpm_2", "scheduler": "sgm_uniform", "denoise": 1.0,
+   137→        }}
+   138→    graph["8"] = {"class_type": "YuE2SaveLatents", "inputs": {"samples": ["6" if decode_only else "7", 0]}}
+   139→    graph["9"] = {"class_type": "VAEDecodeAudioTiled", "inputs": {
+   140→        "samples": ["8", 0], "vae": ["1", 2], "tile_size": song.tile_size, "overlap": song.tile_overlap,
+   141→    }}
+   142→    graph["10"] = {"class_type": "YuE2SaveAudio", "inputs": {"audio": ["9", 0]}}
+   143→    return graph
+   144→
+   145→
+   146→class KaggleYuE2:
+   147→    def __init__(self, root="/kaggle/working/yue2", *, gpu=0):
+   148→        self.root = Path(root).resolve()
+   149→        self.root.mkdir(parents=True, exist_ok=True)
+   150→        self.checkout = self.root / "ComfyUI"
+   151→        self.venv = self.root / "venv"
+   152→        self.python = self.venv / "bin/python"
+   153→        self.runs = self.root / "runs"
+   154→        self.runs.mkdir(exist_ok=True)
+   155→        self.log = self.root / "server.log"
+   156→        self.gpu = int(gpu)
+   157→        self.process = None
+   158→        self.base_url = None
+   159→
+   160→    def environment(self):
+   161→        env = os.environ.copy()
+   162→        support = str(Path(__file__).resolve().parent.parent)
+   163→        env["PYTHONPATH"] = support + (os.pathsep + env["PYTHONPATH"] if env.get("PYTHONPATH") else "")
+   164→        env["YUE2_RUN_ROOT"] = str(self.runs)
+   165→        env["HF_HUB_DISABLE_TELEMETRY"] = "1"
+   166→        env["PYTHONUNBUFFERED"] = "1"
+   167→        return env
+   168→
+   169→    def _pip_wheel(self):
+   170→        """Fetch a verified wheel, without depending on pip or ensurepip."""
+   171→        wheel = self.root / "bootstrap" / PIP_WHEEL
+   172→        wheel.parent.mkdir(parents=True, exist_ok=True)
+   173→        if not wheel.exists():
+   174→            temporary = wheel.with_suffix(".part")
+   175→            try:
+   176→                with urllib.request.urlopen(PIP_URL, timeout=60) as response, temporary.open("wb") as out:
+   177→                    shutil.copyfileobj(response, out)
+   178→                if sha256_file(temporary) != PIP_SHA256:
+   179→                    raise RuntimeError("Bootstrap pip wheel SHA256 mismatch; refusing to execute it")
+   180→                os.replace(temporary, wheel)
+   181→            finally:
+   182→                temporary.unlink(missing_ok=True)
+   183→        if sha256_file(wheel) != PIP_SHA256:
+   184→            raise RuntimeError(f"Bootstrap pip wheel SHA256 mismatch: remove {wheel} and retry setup")
+   185→        return wheel
+   186→
+   187→    def prepare_environment(self):
+   188→        """Create or repair the overlay even after an interrupted ensurepip step."""
+   189→        # Kaggle's distro Python may have a broken/missing ensurepip. Do not call
+   190→        # it, and do not use the mere existence of bin/python as a success marker.
+   191→        command([sys.executable, "-m", "venv", "--system-site-packages", "--without-pip", self.venv])
+   192→        check = r'''
+   193→import json, pathlib, sys, pip
+   194→root = pathlib.Path(sys.argv[1]).resolve()
+   195→assert pathlib.Path(sys.prefix).resolve() == root and sys.prefix != sys.base_prefix
+   196→assert pathlib.Path(pip.__file__).resolve().is_relative_to(root), "pip is inherited, not local"
+   197→assert pip.__version__ == sys.argv[2]
+   198→print(json.dumps({"python": sys.version.split()[0], "pip": pip.__version__, "prefix": str(root)}))
+   199→'''
+   200→        checked = subprocess.run([str(self.python), "-I", "-c", check, str(self.venv), PIP_VERSION],
+   201→                                 capture_output=True, text=True)
+   202→        if checked.returncode:
+   203→            wheel = self._pip_wheel()
+   204→            bootstrap = r'''
+   205→import pathlib, runpy, sys
+   206→root = pathlib.Path(sys.argv[1]).resolve()
+   207→wheel = sys.argv[2]
+   208→assert pathlib.Path(sys.prefix).resolve() == root and sys.prefix != sys.base_prefix
+   209→sys.path.insert(0, wheel)
+   210→sys.argv = ["pip", "--isolated", "--disable-pip-version-check", "install",
+   211→            "--no-index", "--no-deps", "--ignore-installed", "--no-compile", wheel]
+   212→runpy.run_module("pip", run_name="__main__")
+   213→'''
+   214→            command([self.python, "-I", "-c", bootstrap, self.venv, wheel])
+   215→        # Check pip belongs to the overlay: an inherited global pip is not enough.
+   216→        result = command([self.python, "-I", "-c", check, self.venv, PIP_VERSION], capture=True)
+   217→        report = json.loads(result.stdout.strip().splitlines()[-1])
+   218→        atomic_json(self.root / "bootstrap.json", report)
+   219→        print(f"Environment ready: Python {report['python']}, local pip {report['pip']} (ensurepip not used).")
+   220→        return report
+   221→
+   222→    def install(self, local_checkpoint=None):
+   223→        """Use an isolated overlay; never upgrade Kaggle's system PyTorch/NumPy."""
+   224→        if self.process is not None and self.process.poll() is None:
+   225→            raise RuntimeError("Stop the managed server before refreshing its installation")
+   226→        if not sys.platform.startswith("linux") or sys.version_info < (3, 10):
+   227→            raise RuntimeError("Use a Linux Kaggle Python GPU notebook (Python 3.10+)")
+   228→        if shutil.which("git") is None:
+   229→            raise RuntimeError("Git is required in the Kaggle image")
+   230→        free_gib = shutil.disk_usage(self.root).free / 2**30
+   231→        if free_gib < 12:
+   232→            raise RuntimeError(f"Only {free_gib:.1f} GiB free; allow at least 12 GiB for setup and outputs")
+   233→        if not self.checkout.exists():
+   234→            self.checkout.mkdir()
+   235→            command(["git", "init", "-q"], cwd=self.checkout)
+   236→        current = subprocess.run(["git", "rev-parse", "HEAD"], cwd=self.checkout, capture_output=True, text=True)
+   237→        if current.returncode and not (self.checkout / "main.py").exists():
+   238→            command(["git", "fetch", "--depth=1", "https://github.com/Comfy-Org/ComfyUI.git", COMFY_COMMIT], cwd=self.checkout)
+   239→            command(["git", "checkout", "--detach", "FETCH_HEAD"], cwd=self.checkout)
+   240→        elif current.stdout.strip() != COMFY_COMMIT:
+   241→            raise RuntimeError("Existing ComfyUI checkout differs from the pinned revision; use a new root")
+   242→        dirty = command(["git", "diff", "--name-only", "HEAD"], cwd=self.checkout, capture=True).stdout
+   243→        if dirty.strip():
+   244→            raise RuntimeError("ComfyUI source has edits; use a fresh root rather than overwriting them")
+   245→        self.prepare_environment()
+   246→        pins = []
+   247→        for name in ("torch", "torchvision", "torchaudio", "numpy", "scipy", "numba", "llvmlite"):
+   248→            try:
+   249→                pins.append(f"{name}=={importlib.metadata.version(name)}")
+   250→            except importlib.metadata.PackageNotFoundError:
+   251→                pass
+   252→        if not any(x.startswith("torch==") for x in pins):
+   253→            raise RuntimeError("Kaggle's GPU PyTorch is missing; select a current GPU notebook image")
+   254→        constraint = self.root / "kaggle-stack-constraints.txt"
+   255→        constraint.write_text("\n".join(pins) + "\n")
+   256→        # No --upgrade: retain the image's binary scientific/CUDA stack.
+   257→        command([self.python, "-m", "pip", "install", "-r", self.checkout / "requirements.txt",
+   258→                 "-c", constraint, "transformers==4.57.6", "huggingface-hub==0.36.2", "soundfile==0.13.1"],
+   259→                env=self.environment())
+   260→        probe = r'''
+   261→import json, platform, torch
+   262→import numpy, scipy, soundfile, transformers, comfy_kitchen
+   263→import torch.nn.functional as F
+   264→assert torch.cuda.is_available(), "Enable Kaggle GPU acceleration"
+   265→assert tuple(int(x) for x in torch.__version__.split('+')[0].split('.')[:2]) >= (2, 8), "Use a Kaggle image with PyTorch >=2.8"
+   266→devices=[]
+   267→for i in range(torch.cuda.device_count()):
+   268→    p=torch.cuda.get_device_properties(i)
+   269→    devices.append({"index":i,"name":p.name,"vram_gib":p.total_memory/2**30,"capability":list(torch.cuda.get_device_capability(i))})
+   270→q=torch.randn((1,4,8,64),device="cuda",dtype=torch.float32)
+   271→k=torch.randn((1,2,8,64),device="cuda",dtype=torch.float32)
+   272→v=torch.randn_like(k)
+   273→assert torch.isfinite(F.scaled_dot_product_attention(q,k,v,enable_gqa=True)).all()
+   274→print(json.dumps({"python":platform.python_version(),"torch":torch.__version__,"cuda":torch.version.cuda,"devices":devices}))
+   275→'''
+   276→        hardware = json.loads(command([self.python, "-c", probe], env=self.environment(), capture=True).stdout.strip().splitlines()[-1])
+   277→        if self.gpu >= len(hardware["devices"]) or self.gpu < 0:
+   278→            raise RuntimeError(f"GPU {self.gpu} is unavailable")
+   279→        atomic_json(self.root / "hardware.json", hardware)
+   280→        packages = json.loads(command([self.python, "-m", "pip", "list", "--format=json"], capture=True).stdout)
+   281→        freeze = "\n".join(sorted(f"{p['name']}=={p['version']}" for p in packages)) + "\n"
+   282→        (self.root / "installed-packages.txt").write_text(freeze)
+   283→        nodes = self.checkout / "custom_nodes/kaggle_yue2_nodes"
+   284→        nodes.mkdir(parents=True, exist_ok=True)
+   285→        shutil.copyfile(Path(__file__).with_name("comfy_nodes.py"), nodes / "__init__.py")
+   286→        target = self.checkout / "models/checkpoints" / CHECKPOINT
+   287→        target.parent.mkdir(parents=True, exist_ok=True)
+   288→        if local_checkpoint:
+   289→            source = Path(local_checkpoint).resolve()
+   290→        elif target.is_file():
+   291→            source = target.resolve()
+   292→        else:
+   293→            downloader = r'''
+   294→from huggingface_hub import hf_hub_download
+   295→import sys
+   296→print(hf_hub_download("Comfy-Org/YuE2", "checkpoints/"+sys.argv[1], revision=sys.argv[2], cache_dir=sys.argv[3]))
+   297→'''
+   298→            source = Path(command([self.python, "-c", downloader, CHECKPOINT, MODEL_REVISION,
+   299→                                   self.root / "hub-cache"], env=self.environment(), capture=True).stdout.strip().splitlines()[-1])
+   300→        if source.stat().st_size != MODEL_SIZE or sha256_file(source) != MODEL_SHA256:
+   301→            raise RuntimeError("Checkpoint size/SHA256 mismatch; do not use this file")
+   302→        if target.exists() or target.is_symlink():
+   303→            if target.resolve() != source.resolve():
+   304→                raise RuntimeError("Checkpoint path already exists; use a new root to preserve it")
+   305→        else:
+   306→            target.symlink_to(source)
+   307→        runtime = {"comfy_commit": COMFY_COMMIT, "model_revision": MODEL_REVISION,
+   308→                   "model_sha256": MODEL_SHA256, "observer_version": OBSERVER_VERSION,
+   309→                   "observer_sha256": sha256_file(Path(__file__).with_name("comfy_nodes.py")),
+   310→                   "packages_sha256": digest(sorted(freeze.splitlines())), "hardware": hardware}
+   311→        atomic_json(self.root / "runtime.json", runtime)
+   312→        print(json.dumps(hardware, indent=2))
+   313→        print("Setup files prepared. GPU generation has not been validated until a song runs.")
+   314→        print("Native YuE2 uses FP32 text generation on T4. GPU selection is explicit; no automatic pooling of two T4s.")
+   315→        return runtime
+   316→
+   317→    def request(self, method, endpoint, payload=None, *, timeout=30):
+   318→        if self.base_url is None:
+   319→            raise RuntimeError("Start this notebook's managed server first")
+   320→        data = None if payload is None else json.dumps(payload).encode()
+   321→        request = urllib.request.Request(self.base_url + endpoint, data=data, method=method,
+   322→                                         headers={"Content-Type": "application/json"})
+   323→        try:
+   324→            with urllib.request.urlopen(request, timeout=timeout) as response:
+   325→                body = response.read()
+   326→                return json.loads(body) if body.strip() else {}
+   327→        except urllib.error.HTTPError as exc:
+   328→            raise RuntimeError(f"ComfyUI {endpoint}: {exc.code} {exc.read().decode()[:4000]}") from exc
+   329→
+   330→    def start(self, timeout=180):
+   331→        if self.process is not None and self.process.poll() is None:
+   332→            return self.request("GET", "/system_stats")
+   333→        if not (self.root / "runtime.json").is_file():
+   334→            raise RuntimeError("Run installation/preflight first")
+   335→        with socket.socket() as sock:
+   336→            sock.bind(("127.0.0.1", 0))
+   337→            port = sock.getsockname()[1]
+   338→        self.base_url = f"http://127.0.0.1:{port}"
+   339→        args = [self.python, "main.py", "--listen", "127.0.0.1", "--port", port,
+   340→                "--default-device", self.gpu, "--disable-auto-launch", "--disable-partner-nodes",
+   341→                "--disable-all-custom-nodes", "--whitelist-custom-nodes", "kaggle_yue2_nodes",
+   342→                "--cache-none", "--fp32-vae", "--use-split-cross-attention", "--disable-xformers",
+   343→                "--reserve-vram", "1.5", "--output-directory", self.runs]
+   344→        with self.log.open("a") as stream:
+   345→            self.process = subprocess.Popen([str(x) for x in args], cwd=self.checkout,
+   346→                                            env=self.environment(), stdout=stream, stderr=subprocess.STDOUT,
+   347→                                            start_new_session=True)
+   348→        deadline = time.monotonic() + timeout
+   349→        while time.monotonic() < deadline:
+   350→            if self.process.poll() is not None:
+   351→                raise RuntimeError("ComfyUI stopped during startup:\n" + read_tail(self.log))
+   352→            try:
+   353→                self.request("GET", "/system_stats", timeout=2)
+   354→                info = self.request("GET", "/object_info")
+   355→                required = {"CheckpointLoaderSimple", "YuE2GenerateABC", "YuE2GenerateMusic",
+   356→                            "EmptyYuE2LatentAudio", "KSampler", "VAEDecodeAudioTiled",
+   357→                            "YuE2RunContext", "YuE2PersistABC", "YuE2SaveLatents", "YuE2LoadLatents", "YuE2SaveAudio"}
+   358→                missing = required - info.keys()
+   359→                if missing:
+   360→                    raise ValueError(f"Required nodes failed to load: {sorted(missing)}\n{read_tail(self.log)}")
+   361→                atomic_json(self.root / "node-schemas.json", {name: info[name] for name in sorted(required)})
+   362→                print(f"Managed ComfyUI process started on GPU {self.gpu}. No public tunnel is required.")
+   363→                return self.request("GET", "/system_stats")
+   364→            except (urllib.error.URLError, TimeoutError, ConnectionError):
+   365→                time.sleep(1)
+   366→        self.stop()
+   367→        raise TimeoutError("ComfyUI startup timed out:\n" + read_tail(self.log))
+   368→
+   369→    def _ensure_idle(self):
+   370→        queue = self.request("GET", "/queue")
+   371→        if queue.get("queue_running") or queue.get("queue_pending"):
+   372→            raise RuntimeError("The managed server is busy. Wait, cancel, or restart it before submitting another run")
+   373→
+   374→    def cancel(self):
+   375→        # This server belongs exclusively to this notebook. Interrupt active work;
+   376→        # do not claim synchronous completion or delete anything in the queue.
+   377→        return self.request("POST", "/interrupt", {})
+   378→
+   379→    def stop(self):
+   380→        if self.process is not None and self.process.poll() is None:
+   381→            self.process.terminate()
+   382→            try:
+   383→                self.process.wait(timeout=20)
+   384→            except subprocess.TimeoutExpired:
+   385→                self.process.kill()
+   386→                self.process.wait(timeout=10)
+   387→        self.process = None
+   388→        self.base_url = None
+   389→
+   390→    def run(self, song, *, resume_from=None, decode_only=False, timeout=7200, poll_interval=5):
+   391→        if not isinstance(song, SongConfig):
+   392→            raise TypeError("Pass a SongConfig")
+   393→        self._ensure_idle()
+   394→        runtime = read_json(self.root / "runtime.json")
+   395→        source = str(Path(resume_from).resolve()) if resume_from else None
+   396→        if decode_only and not source:
+   397→            raise ValueError("Decode recovery requires a saved run directory")
+   398→        if source and not (Path(source) / "request.json").is_file():
+   399→            raise ValueError("Recovery directory has no request.json")
+   400→        if decode_only:
+   401→            old_song = read_json(Path(source) / "request.json")["song"]
+   402→            current_song = asdict(song)
+   403→            for key in ("tile_size", "tile_overlap"):
+   404→                old_song.pop(key, None)
+   405→                current_song.pop(key, None)
+   406→            if old_song != current_song:
+   407→                raise ValueError("Decode recovery must use the original song settings; only VAE tiles may change")
+   408→        run_id = time.strftime("%Y%m%dT%H%M%SZ", time.gmtime()) + "-" + uuid.uuid4().hex[:10]
+   409→        directory = self.runs / run_id
+   410→        directory.mkdir(exist_ok=False)
+   411→        spec = {"run_id": run_id, "song": asdict(song), "runtime": runtime,
+   412→                "resume_from": source, "decode_only": decode_only}
+   413→        atomic_json(directory / "request.json", spec)
+   414→        graph = build_prompt(song, spec, decode_only=decode_only)
+   415→        atomic_json(directory / "api-prompt.json", graph)
+   416→        if source and decode_only:
+   417→            for name in ("score.abc", "abc_tokens.json", "semantic_tokens.json", "abc_effective.json", "semantic_effective.json"):
+   418→                if (Path(source) / name).is_file():
+   419→                    shutil.copyfile(Path(source) / name, directory / name)
+   420→        # Sampling every two seconds measures both cards without initializing
+   421→        # CUDA in the notebook kernel. Torch stage peaks are saved by the nodes.
+   422→        telemetry = None
+   423→        if shutil.which("nvidia-smi"):
+   424→            with (directory / "gpu.csv").open("w") as stream:
+   425→                telemetry = subprocess.Popen([
+   426→                    "nvidia-smi", "--query-gpu=timestamp,index,name,memory.used,utilization.gpu",
+   427→                    "--format=csv", "--loop=2"], stdout=stream, stderr=subprocess.STDOUT)
+   428→        print(f"Run: {directory}")
+   429→        print(f"Maximum {song.max_duration / 60:.2f} minutes; early endings and cutoffs are reported separately.")
+   430→        if song.max_duration >= 420:
+   431→            print("7–8 minutes is experimental on Kaggle: check acoustic boundaries and the final outro.")
+   432→        submitted = False
+   433→        started = time.monotonic()
+   434→        heartbeat = started
+   435→        log_offset = self.log.stat().st_size if self.log.exists() else 0
+   436→        last_stage = None
+   437→        try:
+   438→            response = self.request("POST", "/prompt", {"prompt": graph, "client_id": run_id})
+   439→            if response.get("node_errors") or not response.get("prompt_id"):
+   440→                raise RuntimeError("Prompt validation failed: " + json.dumps(response))
+   441→            submitted = True
+   442→            prompt_id = response["prompt_id"]
+   443→            atomic_json(directory / "submission.json", response)
+   444→            while time.monotonic() - started < timeout:
+   445→                if self.process is not None and self.process.poll() is not None:
+   446→                    raise RuntimeError("Managed ComfyUI process exited:\n" + read_tail(self.log))
+   447→                history = self.request("GET", f"/history/{prompt_id}")
+   448→                if prompt_id in history:
+   449→                    record = history[prompt_id]
+   450→                    atomic_json(directory / "history.json", record)
+   451→                    status = record.get("status", {})
+   452→                    if status.get("status_str") == "error":
+   453→                        raise RuntimeError("ComfyUI generation failed: " + json.dumps(status.get("messages", []))[-6000:])
+   454→                    if status.get("completed"):
+   455→                        if song.plan_only and not decode_only:
+   456→                            if not (directory / "score.abc").is_file():
+   457→                                raise RuntimeError("Plan-only run completed without a saved score")
+   458→                            result = read_json(directory / "stages.json")
+   459→                            result["status"] = "score_saved"
+   460→                            atomic_json(directory / "stages.json", result)
+   461→                        else:
+   462→                            result = read_json(directory / "stages.json")
+   463→                            if not result.get("audio") or not (directory / "audio.flac").is_file():
+   464→                                raise RuntimeError("Server completed without a verified audio export")
+   465→                        self._summarize(directory, result, time.monotonic() - started)
+   466→                        return directory
+   467→                stage_path = directory / "stages.json"
+   468→                if stage_path.is_file():
+   469→                    stage = read_json(stage_path)
+   470→                    label = (stage.get("status"), tuple(stage.get("stages", {})))
+   471→                    if label != last_stage:
+   472→                        print(f"[{(time.monotonic() - started)/60:.1f} min] {label}")
+   473→                        last_stage = label
+   474→                if time.monotonic() - heartbeat >= 60:
+   475→                    print(f"[{(time.monotonic() - started)/60:.1f} min] Still processing:\n{read_tail(self.log, 2)}")
+   476→                    heartbeat = time.monotonic()
+   477→                time.sleep(poll_interval)
+   478→            raise TimeoutError(f"Run exceeded {timeout/60:.0f} minutes; saved stages remain in {directory}")
+   479→        except BaseException as exc:
+   480→            if submitted:
+   481→                try:
+   482→                    self.cancel()
+   483→                except Exception:
+   484→                    pass
+   485→            atomic_json(directory / "client-error.json", {"type": type(exc).__name__, "error": str(exc)})
+   486→            print(f"Stopped/failed. Saved work: {directory}\n{read_tail(self.log, 12)}")
+   487→            raise
+   488→        finally:
+   489→            if telemetry is not None:
+   490→                telemetry.terminate()
+   491→                try:
+   492→                    telemetry.wait(timeout=5)
+   493→                except subprocess.TimeoutExpired:
+   494→                    telemetry.kill()
+   495→                    telemetry.wait(timeout=5)
+   496→            if self.log.is_file():
+   497→                # Include bounded, run-specific diagnostics in downloadable ZIPs.
+   498→                with self.log.open("rb") as stream, (directory / "server-log.txt").open("wb") as destination:
+   499→                    size = self.log.stat().st_size
+   500→                    stream.seek(max(log_offset, size - 20 * 1024 * 1024))
+   501→                    shutil.copyfileobj(stream, destination, length=1024 * 1024)
+   502→
+   503→    def decode_saved(self, directory, *, tile_size=None, timeout=3600):
+   504→        saved = read_json(Path(directory) / "request.json")
+   505→        values = saved["song"].copy()
+   506→        if tile_size is not None:
+   507→            values["tile_size"] = tile_size
+   508→            values["tile_overlap"] = min(values["tile_overlap"], tile_size // 4)
+   509→        return self.run(SongConfig(**values), resume_from=directory, decode_only=True, timeout=timeout)
+   510→
+   511→    def _summarize(self, directory, result, elapsed):
+   512→        result["client_elapsed_seconds"] = elapsed
+   513→        atomic_json(directory / "summary.json", result)
+   514→        print(f"Result: {result['status']}")
+   515→        if "audio" in result:
+   516→            audio = result["audio"]
+   517→            print(f"Actual audio: {audio['duration_seconds']:.2f}s; requested maximum: {audio['maximum_requested_seconds']:.2f}s")
+   518→            if result["status"] == "audio_saved_with_cutoff":
+   519→                print("WARNING: token limit reached before the ending. The exported recording may be incomplete.")
+   520→            if not audio["near_requested_limit"]:
+   521→                print("The model ended below the selected maximum; no silence or repeated audio was added.")
+   522→        layout = result.get("acoustic_layout", {})
+   523→        if layout.get("continuity_requires_listening"):
+   524→            print("Listen around acoustic boundaries (seconds):", layout["boundary_seconds"])
+   525→        print("Artifacts:", directory)
+   526→
+   527→    def archive(self, directory):
+   528→        directory = Path(directory).resolve()
+   529→        if not directory.is_relative_to(self.runs) or directory == self.runs:
+   530→            raise ValueError("Archive one of this notebook's run directories")
+   531→        return Path(shutil.make_archive(str(directory), "zip", root_dir=directory))
+   532→
