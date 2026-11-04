@@ -602,7 +602,10 @@ def shifted_entries(entries, offset):
 def fmt_lrc(entries):
     lines = []
     for e in entries:
-        lines.append(f"{fmt_lrc_stamp(e['start'])}[{e['text']}]")
+        if e["kind"] == "tag":
+            lines.append(f"{fmt_lrc_stamp(e['start'])}[{e['text']}]")
+        else:
+            lines.append(f"{fmt_lrc_stamp(e['start'])}{e['text']}")
     return "\n".join(lines)
 
 

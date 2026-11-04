@@ -1,0 +1,608 @@
+{
+  "song": "truth_song",
+  "language_detected": "en",
+  "model": "base",
+  "device": "cpu",
+  "lyric_word_match_rate": 0.95,
+  "offset_seconds": 3.2,
+  "bpm": 98.7,
+  "entries": [
+    {
+      "kind": "tag",
+      "text": "Intro",
+      "start": 8.98,
+      "end": 8.98,
+      "words": []
+    },
+    {
+      "kind": "tag",
+      "text": "Verse 1",
+      "start": 8.98,
+      "end": 8.98,
+      "words": []
+    },
+    {
+      "kind": "sing",
+      "text": "Walking through the city lights at midnight",
+      "start": 8.98,
+      "end": 11.48,
+      "words": [
+        {
+          "w": "Walking",
+          "start": 8.98,
+          "end": 9.64,
+          "matched": true
+        },
+        {
+          "w": "through",
+          "start": 9.64,
+          "end": 9.98,
+          "matched": true
+        },
+        {
+          "w": "the",
+          "start": 9.98,
+          "end": 10.16,
+          "matched": true
+        },
+        {
+          "w": "city",
+          "start": 10.16,
+          "end": 10.5,
+          "matched": true
+        },
+        {
+          "w": "lights",
+          "start": 10.5,
+          "end": 10.92,
+          "matched": true
+        },
+        {
+          "w": "at",
+          "start": 10.92,
+          "end": 11.08,
+          "matched": true
+        },
+        {
+          "w": "midnight",
+          "start": 11.08,
+          "end": 11.48,
+          "matched": true
+        }
+      ]
+    },
+    {
+      "kind": "sing",
+      "text": "Neon shadows falling on the street",
+      "start": 16.98,
+      "end": 18.78,
+      "words": [
+        {
+          "w": "Neon",
+          "start": 16.98,
+          "end": 17.12,
+          "matched": true
+        },
+        {
+          "w": "shadows",
+          "start": 17.12,
+          "end": 17.52,
+          "matched": true
+        },
+        {
+          "w": "falling",
+          "start": 17.52,
+          "end": 18.02,
+          "matched": true
+        },
+        {
+          "w": "on",
+          "start": 18.02,
+          "end": 18.26,
+          "matched": true
+        },
+        {
+          "w": "the",
+          "start": 18.26,
+          "end": 18.4,
+          "matched": true
+        },
+        {
+          "w": "street",
+          "start": 18.4,
+          "end": 18.78,
+          "matched": true
+        }
+      ]
+    },
+    {
+      "kind": "sing",
+      "text": "I can hear the distant engines humming",
+      "start": 24.54,
+      "end": 27.28,
+      "words": [
+        {
+          "w": "I",
+          "start": 24.54,
+          "end": 24.66,
+          "matched": true
+        },
+        {
+          "w": "can",
+          "start": 24.66,
+          "end": 24.84,
+          "matched": true
+        },
+        {
+          "w": "hear",
+          "start": 24.84,
+          "end": 25.16,
+          "matched": true
+        },
+        {
+          "w": "the",
+          "start": 25.16,
+          "end": 25.38,
+          "matched": true
+        },
+        {
+          "w": "distant",
+          "start": 25.38,
+          "end": 25.8,
+          "matched": true
+        },
+        {
+          "w": "engines",
+          "start": 25.8,
+          "end": 26.36,
+          "matched": true
+        },
+        {
+          "w": "humming",
+          "start": 26.36,
+          "end": 27.28,
+          "matched": true
+        }
+      ]
+    },
+    {
+      "kind": "sing",
+      "text": "Feel the rhythm moving through my feet",
+      "start": 32.16,
+      "end": 34.35,
+      "words": [
+        {
+          "w": "Feel",
+          "start": 32.16,
+          "end": 32.37,
+          "matched": false
+        },
+        {
+          "w": "the",
+          "start": 32.41,
+          "end": 32.53,
+          "matched": true
+        },
+        {
+          "w": "rhythm",
+          "start": 32.53,
+          "end": 32.81,
+          "matched": true
+        },
+        {
+          "w": "moving",
+          "start": 32.81,
+          "end": 33.31,
+          "matched": true
+        },
+        {
+          "w": "through",
+          "start": 33.31,
+          "end": 33.69,
+          "matched": true
+        },
+        {
+          "w": "my",
+          "start": 33.69,
+          "end": 33.93,
+          "matched": true
+        },
+        {
+          "w": "feet",
+          "start": 33.93,
+          "end": 34.35,
+          "matched": true
+        }
+      ]
+    },
+    {
+      "kind": "tag",
+      "text": "Chorus",
+      "start": 41.53,
+      "end": 41.53,
+      "words": []
+    },
+    {
+      "kind": "sing",
+      "text": "We are the dreamers in the night",
+      "start": 41.53,
+      "end": 43.45,
+      "words": [
+        {
+          "w": "We",
+          "start": 41.53,
+          "end": 41.61,
+          "matched": true
+        },
+        {
+          "w": "are",
+          "start": 41.53,
+          "end": 41.73,
+          "matched": false
+        },
+        {
+          "w": "the",
+          "start": 41.61,
+          "end": 41.77,
+          "matched": true
+        },
+        {
+          "w": "dreamers",
+          "start": 41.77,
+          "end": 42.41,
+          "matched": true
+        },
+        {
+          "w": "in",
+          "start": 42.41,
+          "end": 42.85,
+          "matched": true
+        },
+        {
+          "w": "the",
+          "start": 42.85,
+          "end": 43.11,
+          "matched": true
+        },
+        {
+          "w": "night",
+          "start": 43.11,
+          "end": 43.45,
+          "matched": true
+        }
+      ]
+    },
+    {
+      "kind": "sing",
+      "text": "Holding on until the morning light",
+      "start": 48.7,
+      "end": 50.96,
+      "words": [
+        {
+          "w": "Holding",
+          "start": 48.7,
+          "end": 49.06,
+          "matched": true
+        },
+        {
+          "w": "on",
+          "start": 49.06,
+          "end": 49.42,
+          "matched": true
+        },
+        {
+          "w": "until",
+          "start": 49.42,
+          "end": 49.96,
+          "matched": true
+        },
+        {
+          "w": "the",
+          "start": 49.96,
+          "end": 50.24,
+          "matched": true
+        },
+        {
+          "w": "morning",
+          "start": 50.24,
+          "end": 50.58,
+          "matched": true
+        },
+        {
+          "w": "light",
+          "start": 50.58,
+          "end": 50.96,
+          "matched": true
+        }
+      ]
+    }
+  ],
+  "chapters": [
+    {
+      "name": "Intro",
+      "start": 3.2
+    },
+    {
+      "name": "Verse 1",
+      "start": 8.98
+    },
+    {
+      "name": "Chorus",
+      "start": 41.53
+    }
+  ],
+  "beats": [
+    3.296,
+    3.872,
+    4.448,
+    5.056,
+    5.664,
+    6.272,
+    6.848,
+    7.456,
+    8.064,
+    8.672,
+    9.28,
+    9.92,
+    10.464,
+    11.008,
+    11.616,
+    12.224,
+    12.832,
+    13.44,
+    14.048,
+    14.656,
+    15.264,
+    15.872,
+    16.448,
+    17.056,
+    17.632,
+    18.208,
+    18.848,
+    19.456,
+    20.064,
+    20.672,
+    21.248,
+    21.856,
+    22.464,
+    23.072,
+    23.648,
+    24.256,
+    24.832,
+    25.376,
+    26.08,
+    26.688,
+    27.296,
+    27.872,
+    28.448,
+    29.056,
+    29.664,
+    30.24,
+    30.848,
+    31.456,
+    32.064,
+    32.704,
+    33.344,
+    33.888,
+    34.528,
+    35.072,
+    35.648,
+    36.256,
+    36.864,
+    37.472,
+    38.048,
+    38.656,
+    39.264,
+    39.872,
+    40.448,
+    41.024,
+    41.568,
+    42.144,
+    42.752,
+    43.296,
+    43.936,
+    44.576,
+    45.216,
+    45.856,
+    46.464,
+    47.072,
+    47.648,
+    48.256,
+    48.864,
+    49.6,
+    50.208,
+    50.816,
+    51.36,
+    51.904,
+    52.48,
+    53.056,
+    53.664,
+    54.24,
+    54.848,
+    55.456,
+    56.064,
+    56.64,
+    57.248,
+    57.856,
+    58.464,
+    59.072
+  ],
+  "cut_plan": [
+    {
+      "clip": 1,
+      "section": "Intro",
+      "start": 3.296,
+      "end": 5.664,
+      "duration": 2.37,
+      "frames": 57
+    },
+    {
+      "clip": 2,
+      "section": "Intro",
+      "start": 5.664,
+      "end": 8.98,
+      "duration": 3.32,
+      "frames": 80
+    },
+    {
+      "clip": 3,
+      "section": "Verse 1",
+      "start": 9.28,
+      "end": 11.616,
+      "duration": 2.34,
+      "frames": 56
+    },
+    {
+      "clip": 4,
+      "section": "Verse 1",
+      "start": 11.616,
+      "end": 14.048,
+      "duration": 2.43,
+      "frames": 58
+    },
+    {
+      "clip": 5,
+      "section": "Verse 1",
+      "start": 14.048,
+      "end": 16.448,
+      "duration": 2.4,
+      "frames": 58
+    },
+    {
+      "clip": 6,
+      "section": "Verse 1",
+      "start": 16.448,
+      "end": 18.848,
+      "duration": 2.4,
+      "frames": 58
+    },
+    {
+      "clip": 7,
+      "section": "Verse 1",
+      "start": 18.848,
+      "end": 21.248,
+      "duration": 2.4,
+      "frames": 58
+    },
+    {
+      "clip": 8,
+      "section": "Verse 1",
+      "start": 21.248,
+      "end": 23.648,
+      "duration": 2.4,
+      "frames": 58
+    },
+    {
+      "clip": 9,
+      "section": "Verse 1",
+      "start": 23.648,
+      "end": 26.08,
+      "duration": 2.43,
+      "frames": 58
+    },
+    {
+      "clip": 10,
+      "section": "Verse 1",
+      "start": 26.08,
+      "end": 28.448,
+      "duration": 2.37,
+      "frames": 57
+    },
+    {
+      "clip": 11,
+      "section": "Verse 1",
+      "start": 28.448,
+      "end": 30.848,
+      "duration": 2.4,
+      "frames": 58
+    },
+    {
+      "clip": 12,
+      "section": "Verse 1",
+      "start": 30.848,
+      "end": 33.344,
+      "duration": 2.5,
+      "frames": 60
+    },
+    {
+      "clip": 13,
+      "section": "Verse 1",
+      "start": 33.344,
+      "end": 35.648,
+      "duration": 2.3,
+      "frames": 55
+    },
+    {
+      "clip": 14,
+      "section": "Verse 1",
+      "start": 35.648,
+      "end": 38.048,
+      "duration": 2.4,
+      "frames": 58
+    },
+    {
+      "clip": 15,
+      "section": "Verse 1",
+      "start": 38.048,
+      "end": 41.53,
+      "duration": 3.48,
+      "frames": 84
+    },
+    {
+      "clip": 16,
+      "section": "Chorus",
+      "start": 41.568,
+      "end": 43.936,
+      "duration": 2.37,
+      "frames": 57
+    },
+    {
+      "clip": 17,
+      "section": "Chorus",
+      "start": 43.936,
+      "end": 46.464,
+      "duration": 2.53,
+      "frames": 61
+    },
+    {
+      "clip": 18,
+      "section": "Chorus",
+      "start": 46.464,
+      "end": 48.864,
+      "duration": 2.4,
+      "frames": 58
+    },
+    {
+      "clip": 19,
+      "section": "Chorus",
+      "start": 48.864,
+      "end": 51.36,
+      "duration": 2.5,
+      "frames": 60
+    },
+    {
+      "clip": 20,
+      "section": "Chorus",
+      "start": 51.36,
+      "end": 53.664,
+      "duration": 2.3,
+      "frames": 55
+    },
+    {
+      "clip": 21,
+      "section": "Chorus",
+      "start": 53.664,
+      "end": 56.064,
+      "duration": 2.4,
+      "frames": 58
+    },
+    {
+      "clip": 22,
+      "section": "Chorus",
+      "start": 56.064,
+      "end": 59.2,
+      "duration": 3.14,
+      "frames": 75
+    }
+  ]
+}

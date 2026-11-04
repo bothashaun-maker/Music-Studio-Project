@@ -1,0 +1,10 @@
+#,Name,Start,End,Length,Color
+M1,"Walking through the city lights at midnight",00:00:08.980,,,
+M2,"Neon shadows falling on the street",00:00:16.980,,,
+M3,"I can hear the distant engines humming",00:00:24.540,,,
+M4,"Feel the rhythm moving through my feet",00:00:32.160,,,
+M5,"We are the dreamers in the night",00:00:41.530,,,
+M6,"Holding on until the morning light",00:00:48.700,,,
+R1,"Intro",00:00:08.980,00:00:08.980,00:00:00.000,
+R2,"Verse 1",00:00:08.980,00:00:41.530,00:00:32.550,
+R3,"Chorus",00:00:41.530,00:00:59.200,00:00:17.670,

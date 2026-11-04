@@ -115,3 +115,27 @@ on request.
    (Clean test speech was verified; real sung vocals may wobble slightly more — the
    REAPER audit and the nudge box are there for that.)
 3. Optional: say "ja" in the chat if you want the READ-ME guide translated into Afrikaans.
+
+---
+
+## Part 7 — "Check the movie director chat… I want my comfy canvas, not the AIQuest wrapper" → clarified (2026-11-03)
+
+Shaun meant the MUSIC side: all music workflows must work exactly like the Movies
+notebooks (one cell → Cloudflare link → real ComfyUI canvas, Workflows menu). The
+"AIQuest wrapper" was identified: the Music notebook header itself says it was based
+on the original AIQUEST Academy notebook — the old 5-cell layout.
+
+## Part 8 — Revision 12 built and shipped (2026-11-03)
+
+1. **YuE2 notebook rebuilt as ONE cell** (md + code + md, like Director.ipynb):
+   setup → weights → persistent ComfyUI → Cloudflare links open the Full Song /
+   Cover canvases directly. Gradio generator kept as `GRADIO_UI = True` opt-in.
+2. **Song Timestamp Studio rebuilt as a 7-node ComfyUI canvas** (TimestampStudio
+   node pack over the same tested engine): LoadAudio → Align Lyrics ← Lyrics &
+   Options; Nudge → Export All; Audition → PreviewAudio. Single-cell notebook,
+   Cloudflare link with ?sts_workflow=studio, Whisper models pre-cached.
+3. Validated: 77/77 repo checks; canvas queued end-to-end through real pinned
+   ComfyUI on the known-truth song (max line error ±0.46 s, identical to the
+   engine; nudge exact); real-browser audit loaded all 7 nodes with no errors.
+4. GitHub task updated: upload the 35 files in yue2-music-revision-12.zip +
+   Song-Timestamp-Studio-Canvas.ipynb, then reply "done".
