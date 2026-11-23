@@ -1,0 +1,148 @@
++ TOOLS=/home/z/my-project/gh/_pins/build-tools
++ SRC=/home/z/my-project/gh/_pins/whisper.cpp
++ BUILD=/home/z/my-project/gh/_pins/whisper-build
++ rm -rf /home/z/my-project/gh/_pins/whisper-build
++ export PATH=/home/z/my-project/gh/_pins/build-tools/bin:/home/z/.venv/bin:/home/z/.npm-global/bin:/home/z/.bun/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/usr/local/bun-node-fallback-bin
++ PATH=/home/z/my-project/gh/_pins/build-tools/bin:/home/z/.venv/bin:/home/z/.npm-global/bin:/home/z/.bun/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/usr/local/bun-node-fallback-bin
++ export PYTHONPATH=/home/z/my-project/gh/_pins/build-tools
++ PYTHONPATH=/home/z/my-project/gh/_pins/build-tools
++ head -1
++ cmake --version
+cmake version 3.31.6
++ cmake -S /home/z/my-project/gh/_pins/whisper.cpp -B /home/z/my-project/gh/_pins/whisper-build -G Ninja -DCMAKE_BUILD_TYPE=Release -DGGML_NATIVE=OFF '-DCMAKE_BUILD_RPATH=$ORIGIN' '-DCMAKE_INSTALL_RPATH=$ORIGIN' -DCMAKE_BUILD_WITH_INSTALL_RPATH=ON -DGGML_CCACHE=OFF -DGGML_CUDA=OFF -DCMAKE_DISABLE_FIND_PACKAGE_CUDAToolkit=TRUE -DBUILD_SHARED_LIBS=ON -DWHISPER_BUILD_TESTS=OFF -DWHISPER_BUILD_SERVER=OFF
+CMake Deprecation Warning at CMakeLists.txt:1 (cmake_minimum_required):
+  Compatibility with CMake < 3.10 will be removed from a future version of
+  CMake.
+
+  Update the VERSION argument <min> value.  Or, use the <min>...<max> syntax
+  to tell CMake that the project requires at least <min> but has been updated
+  to work with policies introduced by <max> or earlier.
+
+
+-- The C compiler identification is GNU 14.2.0
+-- The CXX compiler identification is GNU 14.2.0
+-- Detecting C compiler ABI info
+-- Detecting C compiler ABI info - done
+-- Check for working C compiler: /usr/bin/cc - skipped
+-- Detecting C compile features
+-- Detecting C compile features - done
+-- Detecting CXX compiler ABI info
+-- Detecting CXX compiler ABI info - done
+-- Check for working CXX compiler: /usr/bin/c++ - skipped
+-- Detecting CXX compile features
+-- Detecting CXX compile features - done
+-- whisper.cpp version: 1.9.5-dev
+-- Found Git: /usr/bin/git (found version "2.47.3")
+-- The ASM compiler identification is GNU
+-- Found assembler: /usr/bin/cc
+-- Performing Test CMAKE_HAVE_LIBC_PTHREAD
+-- Performing Test CMAKE_HAVE_LIBC_PTHREAD - Success
+-- Found Threads: TRUE
+-- CMAKE_SYSTEM_PROCESSOR: x86_64
+-- GGML_SYSTEM_ARCH: x86
+-- Found OpenMP_C: -fopenmp (found version "4.5")
+-- Found OpenMP_CXX: -fopenmp (found version "4.5")
+-- Found OpenMP: TRUE (found version "4.5")
+-- Including CPU backend
+-- x86 detected
+-- Adding CPU backend variant ggml-cpu: -msse4.2;-mf16c;-mfma;-mbmi2;-mavx;-mavx2 GGML_SSE42;GGML_F16C;GGML_FMA;GGML_BMI2;GGML_AVX;GGML_AVX2
+-- ggml version: 0.26.0
+-- ggml commit:  d1be6fd
+-- Configuring done (0.7s)
+-- Generating done (0.0s)
+CMake Warning:
+  Manually-specified variables were not used by the project:
+
+    CMAKE_DISABLE_FIND_PACKAGE_CUDAToolkit
+
+
+-- Build files have been written to: /home/z/my-project/gh/_pins/whisper-build
++ cmake --build /home/z/my-project/gh/_pins/whisper-build --target whisper-cli --parallel 2
+[1/44] Building CXX object ggml/src/CMakeFiles/ggml-base.dir/ggml.cpp.o
+[2/44] Building C object ggml/src/CMakeFiles/ggml-base.dir/ggml-alloc.c.o
+[3/44] Building C object ggml/src/CMakeFiles/ggml-base.dir/ggml.c.o
+[4/44] Building CXX object ggml/src/CMakeFiles/ggml-base.dir/ggml-backend.cpp.o
+[5/44] Building CXX object ggml/src/CMakeFiles/ggml-base.dir/ggml-opt.cpp.o
+[6/44] Building CXX object ggml/src/CMakeFiles/ggml-base.dir/ggml-threading.cpp.o
+[7/44] Building CXX object ggml/src/CMakeFiles/ggml-base.dir/ggml-backend-meta.cpp.o
+[8/44] Building C object ggml/src/CMakeFiles/ggml-base.dir/ggml-quants.c.o
+[9/44] Building CXX object ggml/src/CMakeFiles/ggml-base.dir/gguf.cpp.o
+[10/44] Linking CXX shared library bin/libggml-base.so.0.26.0
+[11/44] Creating library symlink bin/libggml-base.so.0 bin/libggml-base.so
+[12/44] Building CXX object ggml/src/CMakeFiles/ggml.dir/ggml-backend-dl.cpp.o
+[13/44] Building CXX object ggml/src/CMakeFiles/ggml.dir/ggml-backend-reg.cpp.o
+[14/44] Building C object ggml/src/CMakeFiles/ggml-cpu.dir/ggml-cpu/ggml-cpu.c.o
+[15/44] Building CXX object ggml/src/CMakeFiles/ggml-cpu.dir/ggml-cpu/ggml-cpu.cpp.o
+[16/44] Building CXX object ggml/src/CMakeFiles/ggml-cpu.dir/ggml-cpu/hbm.cpp.o
+[17/44] Building C object ggml/src/CMakeFiles/ggml-cpu.dir/ggml-cpu/quants.c.o
+[18/44] Building CXX object ggml/src/CMakeFiles/ggml-cpu.dir/ggml-cpu/traits.cpp.o
+[19/44] Building CXX object ggml/src/CMakeFiles/ggml-cpu.dir/ggml-cpu/amx/amx.cpp.o
+[20/44] Building CXX object ggml/src/CMakeFiles/ggml-cpu.dir/ggml-cpu/amx/mmq.cpp.o
+[21/44] Building CXX object ggml/src/CMakeFiles/ggml-cpu.dir/ggml-cpu/repack.cpp.o
+[22/44] Building CXX object ggml/src/CMakeFiles/ggml-cpu.dir/ggml-cpu/tiled/tiled-kernel.cpp.o
+[23/44] Building CXX object ggml/src/CMakeFiles/ggml-cpu.dir/ggml-cpu/tiled/tiled.cpp.o
+[24/44] Building CXX object ggml/src/CMakeFiles/ggml-cpu.dir/ggml-cpu/binary-ops.cpp.o
+[25/44] Building CXX object ggml/src/CMakeFiles/ggml-cpu.dir/ggml-cpu/vec.cpp.o
+[26/44] Building CXX object ggml/src/CMakeFiles/ggml-cpu.dir/ggml-cpu/unary-ops.cpp.o
+[27/44] Building C object ggml/src/CMakeFiles/ggml-cpu.dir/ggml-cpu/arch/x86/quants.c.o
+[28/44] Building CXX object ggml/src/CMakeFiles/ggml-cpu.dir/ggml-cpu/arch/x86/repack.cpp.o
+[29/44] Building CXX object ggml/src/CMakeFiles/ggml-cpu.dir/ggml-cpu/ops.cpp.o
+[30/44] Linking CXX shared library bin/libggml-cpu.so.0.26.0
+[31/44] Creating library symlink bin/libggml-cpu.so.0 bin/libggml-cpu.so
+[32/44] Linking CXX shared library bin/libggml.so.0.26.0
+[33/44] Creating library symlink bin/libggml.so.0 bin/libggml.so
+[34/44] Building CXX object src/CMakeFiles/whisper.dir/aneforge/whisper-aneforge.cpp.o
+[35/44] Building CXX object examples/CMakeFiles/common.dir/common.cpp.o
+[36/44] Building CXX object examples/CMakeFiles/common.dir/common-ggml.cpp.o
+[37/44] Building CXX object src/CMakeFiles/whisper.dir/whisper.cpp.o
+[38/44] Linking CXX shared library bin/libwhisper.so.1.9.5
+[39/44] Creating library symlink bin/libwhisper.so.1 bin/libwhisper.so
+[40/44] Building CXX object examples/CMakeFiles/common.dir/grammar-parser.cpp.o
+[41/44] Building CXX object examples/cli/CMakeFiles/whisper-cli.dir/cli.cpp.o
+[42/44] Building CXX object examples/CMakeFiles/common.dir/common-whisper.cpp.o
+[43/44] Linking CXX static library examples/libcommon.a
+[44/44] Linking CXX executable bin/whisper-cli
++ echo '=== produced binaries/libs ==='
+=== produced binaries/libs ===
++ find /home/z/my-project/gh/_pins/whisper-build -name whisper-cli -o -name 'libwhisper*' -o -name 'libggml*'
++ sort
++ grep -v CMakeFiles
+/home/z/my-project/gh/_pins/whisper-build/bin/libggml-base.so
+/home/z/my-project/gh/_pins/whisper-build/bin/libggml-base.so.0
+/home/z/my-project/gh/_pins/whisper-build/bin/libggml-base.so.0.26.0
+/home/z/my-project/gh/_pins/whisper-build/bin/libggml-cpu.so
+/home/z/my-project/gh/_pins/whisper-build/bin/libggml-cpu.so.0
+/home/z/my-project/gh/_pins/whisper-build/bin/libggml-cpu.so.0.26.0
+/home/z/my-project/gh/_pins/whisper-build/bin/libggml.so
+/home/z/my-project/gh/_pins/whisper-build/bin/libggml.so.0
+/home/z/my-project/gh/_pins/whisper-build/bin/libggml.so.0.26.0
+/home/z/my-project/gh/_pins/whisper-build/bin/libwhisper.so
+/home/z/my-project/gh/_pins/whisper-build/bin/libwhisper.so.1
+/home/z/my-project/gh/_pins/whisper-build/bin/libwhisper.so.1.9.5
+/home/z/my-project/gh/_pins/whisper-build/bin/whisper-cli
+++ find /home/z/my-project/gh/_pins/whisper-build -name whisper-cli -type f
+++ head -1
++ BIN=/home/z/my-project/gh/_pins/whisper-build/bin/whisper-cli
++ echo '=== ldd /home/z/my-project/gh/_pins/whisper-build/bin/whisper-cli ==='
+=== ldd /home/z/my-project/gh/_pins/whisper-build/bin/whisper-cli ===
++ ldd /home/z/my-project/gh/_pins/whisper-build/bin/whisper-cli
+	linux-vdso.so.1 (0x00007ffdabdc0000)
+	libwhisper.so.1 => /home/z/my-project/gh/_pins/whisper-build/bin/libwhisper.so.1 (0x00007f5e15486000)
+	libggml.so.0 => /home/z/my-project/gh/_pins/whisper-build/bin/libggml.so.0 (0x00007f5e15479000)
+	libstdc++.so.6 => /lib/x86_64-linux-gnu/libstdc++.so.6 (0x00007f5e15204000)
+	libm.so.6 => /lib/x86_64-linux-gnu/libm.so.6 (0x00007f5e15114000)
+	libgcc_s.so.1 => /lib/x86_64-linux-gnu/libgcc_s.so.1 (0x00007f5e150e5000)
+	libc.so.6 => /lib/x86_64-linux-gnu/libc.so.6 (0x00007f5e14ef1000)
+	libggml-base.so.0 => /home/z/my-project/gh/_pins/whisper-build/bin/libggml-base.so.0 (0x00007f5e14e24000)
+	libggml-cpu.so.0 => /home/z/my-project/gh/_pins/whisper-build/bin/libggml-cpu.so.0 (0x00007f5e14c75000)
+	/lib64/ld-linux-x86-64.so.2 (0x00007f5e155d8000)
+	libgomp.so.1 => /lib/x86_64-linux-gnu/libgomp.so.1 (0x00007f5e14c20000)
++ echo '=== run --help ==='
+=== run --help ===
++ /home/z/my-project/gh/_pins/whisper-build/bin/whisper-cli --help
++ head -5
+
+usage: /home/z/my-project/gh/_pins/whisper-build/bin/whisper-cli [options] file0 file1 ...
+supported audio formats: flac, mp3, ogg, wav
+
+options:

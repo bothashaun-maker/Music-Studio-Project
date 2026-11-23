@@ -1,0 +1,25 @@
+song fixture: 104 MB WAV, sha256=77a9f21cd36127c3…
+Scenario A — ComfyUI standard Load Audio single-request cap:
+  A) POST 104 MB to a 100 MB-capped endpoint -> HTTP 413
+Scenario B/C — rev15 cover uploader (new):
+   input_sha256: 77a9f21cd36127c326930b9173b744d2f3cdc7ae9d86eec13176e0a656bab488
+   chunk_statuses: [400, 200, 200, 200, 200, 200, 200, 200, 200, 200, 200, 200, 200, 200, 200, 200, 200, 200, 200, 200, 200, 200, 200, 200, 200, 200, 200, 200, 200, 200, 200, 200, 200, 200, 200, 200, 200, 200, 200, 200, 200, 200, 200, 200, 200, 200, 200, 200, 200, 200, 200, 200, 200, 200, 200, 200, 200, 200, 200, 200, 200, 200, 200, 200, 200, 200, 200, 200, 200, 200, 200, 200, 200, 200, 200, 200, 200, 200, 200, 200, 200, 200, 200, 200, 200, 200, 200, 200, 200, 200, 200, 200, 200, 200, 200, 200, 200, 200, 200, 200, 200, 200, 200, 200, 200]
+   corrupt_piece_status: 400
+   corrupt_piece_error: Upload piece failed its SHA-256 checksum; retry this piece
+   completed_after_corrupt: 104 pieces: [0, 1, 2, 3]…
+   finish_status: 200
+   finish: {'ok': True, 'filename': 'cover.wav', 'bytes': 109051904, 'sha256': '77a9f21cd36127c326930b9173b744d2f3cdc7ae9d86eec13176e0a656bab488'}
+   assembled_sha256: 77a9f21cd36127c326930b9173b744d2f3cdc7ae9d86eec13176e0a656bab488
+   pieces_removed: True
+   VERDICT: damaged piece refused with HTTP 400 ; clean upload assembled byte-identical, server recorded SHA-256: 77a9f21cd36127c326930b9173b744d2f3cdc7ae9d86eec13176e0a656bab488 -> NO LOSS
+Scenario B/C — timestamp sts uploader (new):
+   input_sha256: 77a9f21cd36127c326930b9173b744d2f3cdc7ae9d86eec13176e0a656bab488
+   chunk_statuses: [400, 200, 200, 200, 200, 200, 200, 200, 200, 200, 200, 200, 200, 200]
+   corrupt_piece_status: 400
+   corrupt_piece_error: piece failed its SHA-256 checksum; send it again
+   completed_after_corrupt: 13 pieces: [0, 1, 2, 3]…
+   finish_status: 200
+   finish: {'ok': True, 'filename': 'cover.wav', 'bytes': 109051904, 'sha256': '77a9f21cd36127c326930b9173b744d2f3cdc7ae9d86eec13176e0a656bab488'}
+   assembled_sha256: 77a9f21cd36127c326930b9173b744d2f3cdc7ae9d86eec13176e0a656bab488
+   pieces_removed: True
+   VERDICT: damaged piece refused with HTTP 400 ; clean upload assembled byte-identical, server recorded SHA-256: 77a9f21cd36127c326930b9173b744d2f3cdc7ae9d86eec13176e0a656bab488 -> NO LOSS

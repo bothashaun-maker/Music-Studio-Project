@@ -1,0 +1,26 @@
+start fds healthy: {0: True, 1: True, 2: True}
+ 0 test_dataset_flow.CpuToolchainTests.test_cpu_helpers_cannot_inherit_cuda_toolkit_detection ok=True fds={0: True, 1: True, 2: True}
+ 1 test_dataset_flow.CudaExtractionTests.test_cuda_probe_rejects_missing_compiler             ok=True fds={0: True, 1: True, 2: True}
+ 2 test_dataset_flow.CudaExtractionTests.test_cuda_probe_writes_a_real_newline_in_cuda_source ok=True fds={0: True, 1: True, 2: True}
+ 3 test_dataset_flow.CudaExtractionTests.test_static_cuda_runtime_is_kept_but_heavy_static_bl ok=True fds={0: True, 1: True, 2: True}
+ 4 test_dataset_flow.CudaExtractionTests.test_tar_extraction_preserves_executable_bit         ok=True fds={0: True, 1: True, 2: True}
+ 5 test_dataset_flow.DatasetFlowTests.test_builder_streams_runtime_then_assets_then_manifest  ok=True fds={0: True, 1: True, 2: True}
+ 6 test_dataset_flow.DatasetFlowTests.test_missing_owner_stops_before_any_work                ok=True fds={0: True, 1: True, 2: True}
+ 7 test_dataset_flow.DatasetFlowTests.test_owned_downloads_are_released_and_inputs_preserved  ok=True fds={0: True, 1: True, 2: True}
+ 8 test_dataset_flow.DatasetFlowTests.test_saved_catalog_is_validated                         ok=True fds={0: True, 1: True, 2: True}
+ 9 test_dataset_flow.NotebookPayloadTests.test_driver_embeds_a_verified_builder_archive       ok=True fds={0: True, 1: True, 2: True}
+10 test_dataset_flow.PreflightTests.test_all_good_pins_pass                                   ok=True fds={0: True, 1: True, 2: True}
+11 test_dataset_flow.PreflightTests.test_dead_pin_stops_before_any_build                      ok=True fds={0: True, 1: True, 2: True}
+12 test_dataset_flow.PreflightTests.test_every_pinned_remote_is_enumerated                    ok=True fds={0: True, 1: True, 2: True}
+13 test_dataset_flow.PreflightTests.test_size_mismatch_is_reported                            ok=True fds={0: True, 1: True, 2: True}
+14 test_dataset_flow.ToolkitEnvTests.test_toolkit_refetches_cudart_when_static_runtime_files_ ok=False fds={0: True, 1: True, 2: True}
+15 test_dataset_flow.ToolkitEnvTests.test_toolkit_still_exports_cuda_env_when_already_complet ok=False fds={0: True, 1: False, 2: True}   <== CHANGED
+16 test_packaging.PackagingTests.test_archives_cannot_write_outside_runtime                   ok=True fds={0: True, 1: False, 2: True}
+17 test_packaging.PackagingTests.test_arm_release_is_rejected_before_execution                ok=True fds={0: True, 1: False, 2: True}
+18 test_packaging.PackagingTests.test_changed_model_or_catalog_cannot_be_reused               ok=True fds={0: True, 1: False, 2: True}
+19 test_packaging.PackagingTests.test_credentials_are_removed_from_saved_error_messages       ok=True fds={0: True, 1: False, 2: True}
+20 test_packaging.PackagingTests.test_internal_library_aliases_can_be_extracted               ok=True fds={0: True, 1: False, 2: True}
+21 test_packaging.PackagingTests.test_notebooks_are_one_cell_self_contained_and_have_no_outpu ok=True fds={0: True, 1: False, 2: True}
+22 test_packaging.PackagingTests.test_rejected_creation_has_no_success_receipt                ok=False fds={0: True, 1: False, 2: True}
+23 test_packaging.PackagingTests.test_restore_preserves_audio_and_does_not_replace_current_wo ok=False fds={0: True, 1: True, 2: True}   <== CHANGED
+24 test_packaging.PackagingTests.test_streaming_native_sdk_uses_one_private_request_and_prese ok=False fds={0: True, 1: True, 2: True}

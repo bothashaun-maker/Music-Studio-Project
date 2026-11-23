@@ -1,0 +1,25 @@
+song fixture: 104 MB WAV, sha256=77a9f21cd36127c3…
+Scenario A — ComfyUI standard Load Audio single-request cap:
+  A) POST 104 MB to a 100 MB-capped endpoint -> HTTP 413
+Scenario B/C — rev15 cover uploader (old):
+   input_sha256: 469435ee6e2c0e6a14d2b1fa7ed7b3cbe994ed3e120d4592bc312377c4946356
+   chunk_statuses: [200, 200, 200, 200, 200, 200, 200, 200, 200, 200, 200, 200, 200, 200, 200, 200, 200, 200, 200, 200, 200, 200, 200, 200, 200, 200, 200, 200, 200, 200, 200, 200, 200, 200, 200, 200, 200, 200, 200, 200, 200, 200, 200, 200, 200, 200, 200, 200, 200, 200, 200, 200, 200, 200, 200, 200, 200, 200, 200, 200, 200, 200, 200, 200, 200, 200, 200, 200, 200, 200, 200, 200, 200, 200, 200, 200, 200, 200, 200, 200, 200, 200, 200, 200, 200, 200, 200, 200, 200, 200, 200, 200, 200, 200, 200, 200, 200, 200, 200, 200, 200, 200, 200, 200]
+   corrupt_piece_status: 200
+   corrupt_piece_error: None
+   completed_after_corrupt: 104 pieces: [0, 1, 2, 3]…
+   finish_status: 200
+   finish: {'ok': True, 'filename': 'cover.wav', 'bytes': 109051904}
+   assembled_sha256: 469435ee6e2c0e6a14d2b1fa7ed7b3cbe994ed3e120d4592bc312377c4946356
+   pieces_removed: True
+   VERDICT: the damaged piece was ACCEPTED; the assembled song equals the damaged input — loss with no error.
+Scenario B/C — timestamp sts uploader (old):
+   input_sha256: d54b209bbef2e7f8abaab65bfd3f6b79662c18325837cc87fc0636346a66b176
+   chunk_statuses: [200, 200, 200, 200, 200, 200, 200, 200, 200, 200, 200, 200, 200]
+   corrupt_piece_status: 200
+   corrupt_piece_error: None
+   completed_after_corrupt: 13 pieces: [0, 1, 2, 3]…
+   finish_status: 200
+   finish: {'ok': True, 'filename': 'cover.wav', 'bytes': 109051904}
+   assembled_sha256: d54b209bbef2e7f8abaab65bfd3f6b79662c18325837cc87fc0636346a66b176
+   pieces_removed: True
+   VERDICT: the damaged piece was ACCEPTED; the assembled song equals the damaged input — loss with no error.

@@ -1,0 +1,19 @@
+..CUDA preflight: nvcc compiled and linked an SM75 probe with the pinned static runtime.
+............Repairing cached CUDA toolkit: cuda_cudart is missing lib/libcudart_static.a, lib/libcudadevrt.a, lib/libcudart.so.
+........Music Studio Dataset: 1 saved assets; 0.00 GB plus the compiled runtime.
+Largest missing file: 0.00 GB. Measured free cache space: 8.07 GB.
+.Restored saved Music Studio library: /tmp/tmpme4wp5u_/input/music_studio
+.Music Studio Dataset: 2 saved assets; 0.00 GB plus the compiled runtime.
+Largest missing file: 0.00 GB. Measured free cache space: 8.07 GB.
+Uploading verified asset: runtime.tar.gz
+Uploading verified asset: first.bin
+Uploading verified asset: second.bin
+PRIVATE MUSIC STUDIO DATASET SUBMITTED: https://www.kaggle.com/datasets/test-owner/music-studio-dataset-v1-46cd2278c7be
+Wait for processing. In Music-Studio.ipynb use Add Input → Your Datasets → this ONE Music Studio Dataset.
+The Dataset saves tools and models. Save generated songs separately with Kaggle output files.
+Previously submitted private Music Studio Dataset: https://www.kaggle.com/datasets/test-owner/music-studio-dataset-v1-46cd2278c7be
+.
+----------------------------------------------------------------------
+Ran 25 tests in 0.042s
+
+OK
